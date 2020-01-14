@@ -1,6 +1,6 @@
 # SpellingBenchmark
 
-The source code will be uploaded after clean up.
+This repository contains all related code for our spelling error correction benchmark, including the evaluator source code as well as the web frontend we've used for visualisation.
 
 ## Setup
 
