@@ -1,0 +1,31 @@
+{% extends 'workbench/base.html' %}
+{% load bootstrap4 %}
+
+{% block content %}
+<br>
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="float-left">{{ benchmark.benchmark_name }}</h2>
+
+          <p class="body-text float-right position-static">
+            <a href="{% url 'workbench:download_data' benchmark.id  %}"><button type="button" class="btn btn-primary">Download data</button></a>
+            <a href="{% url 'workbench:upload_results' benchmark.id  %}"><button type="button" class="btn btn-success">Upload results</button></a>
+            <a href="{% url 'workbench:result_format' %}"><button type="button" class="btn btn-danger">Format<span class="glyphicon glyphicon-question-sign"></span></button></a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Visualization -->
+  
+{% endblock %}
+
+
+{% block extra_js %}
+<script type="text/javascript">
+
+</script>
+{% endblock %}

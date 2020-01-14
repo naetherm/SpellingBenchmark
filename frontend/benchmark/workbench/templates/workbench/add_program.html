@@ -1,0 +1,48 @@
+{% extends 'workbench/base.html' %}
+{% load bootstrap4 %}
+
+{% block content %}
+<br>
+<div class="container">
+  <div class="row">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h2>Add Program</h2>
+        </div>
+
+        <div class="card-body">
+          <form method="post">
+            {% csrf_token %}
+
+            <div class="input-group">
+              <div class="input-group-prepend w-25">
+                <span class="input-group-text w-100">Program</span>
+              </div>
+              <input id="program_name" name="program_name" type="text" aria-label="program_name" class="form-control">
+            </div><br>
+            <div class="input-group">
+              <div class="input-group-prepend w-25">
+                <span class="input-group-text w-100">Developer</span>
+              </div>
+              <input id="developer" name="developer" type="text" aria-label="developer" class="form-control">
+            </div><br>
+            <div class="input-group">
+              <div class="input-group-prepend w-25">
+                <span class="input-group-text w-100">URL</span>
+              </div>
+              <input id="url" name="url" type="text" aria-label="developer" class="form-control">
+            </div><br>
+
+            <div class="input-group">
+              <input class="btn btn-primary w-100" type="submit" value="Add" />
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

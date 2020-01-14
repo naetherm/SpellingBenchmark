@@ -1,0 +1,39 @@
+{% extends 'workbench/base.html' %}
+
+
+{% block content %}
+
+{% if form.errors %}
+<p>Your username and password didn't match. Please try again!</p>
+{% endif %}
+
+<div class="login-page">
+  <form method="post" action="{% url 'login' %}">
+  {% csrf_token %}
+
+  <div class="form-group">
+    <label for="inputUsername">{{ form.username.label_tag }}</label>
+    <input name="{{ form.username.name }}" type="text" class="form-control" id="{{ form.username.id_for_label }}" aria-describedby="emailHelp" placeholder="Enter username">
+    <small id="emailHelp" class="form-text text-muted">We'll never share your information with anyone else.</small>
+  </div>
+
+  <div class="form-group">
+    <label for="inputUsername">{{ form.password.label_tag }}</label>
+    <input name="{{ form.password.name }}" type="password" class="form-control" id="{{ form.password.id_for_label }}" placeholder="Enter password">
+  </div>
+  </table>
+
+  <input type="submit" value="login" />
+  <input type="hidden" name="next" value="{{ next }}" />
+  </form>
+</dvi>
+
+<div class="container-fluid">
+<div class="row-fluid">
+  <div class="centering col-md-6">
+
+  </div>
+</div>
+</div>
+
+{% endblock %}

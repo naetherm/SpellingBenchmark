@@ -1,0 +1,196 @@
+{% extends 'workbench/base.html' %}
+{% load bootstrap4 %}
+
+{% block content %}
+<br>
+  <div class="container">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header">
+            <h2>Input format</h2>
+          </div>
+          <div class="card-body">
+            <p class="body-text">
+              The following small snippets describe the format of the input format. Keep in mind
+              that all data of the benchmark is divided into sentences, so the last punctation (if
+              there is any at all), will not be followed by any spacing.
+
+              <pre>
+{
+  "tokens": [
+    {
+      "id": "s{SENTENCE_ID}.w{WORD_ID}",
+      "token": "{TOKEN}",
+      "space": "true/false"
+    },
+    ...
+  ]
+}
+              </pre>
+
+            </p>
+            <p class="body-text">
+              <h4><i>id</i></h4>
+              The unique identifier for tokens. The first numberic portion <i>${ARTICLE_ID}</i> describes the article number, 
+              the second portion <i>s{SENTENCE_ID}</i> describes the sentence number <i>{SENTENCE_ID}</i> while the third portion <i>w{WORD_ID}</i>
+              describes the a word within the sentence. For all, articles, sentences, and words, the indexing starts
+              with the number 0.
+            </p>
+            <p class="body-text">
+              <h4><i>token</i></h4>
+              This hold just the token.
+            </p>
+            <p class="body-text">
+              <h4><i>space</i></h4>
+              Determines whether a space should be placed after that element.
+            </p>
+
+            <hr>
+
+            <p class="body-text">
+              As an example consider the input sentence "<i><b>I took the bus form ground station.</b></i>"
+              for which the input format would be the following json:
+
+              <pre>
+{
+  "predictions": [
+    {"id": "a0.s0.w0", "token": "I", "space": true},
+    {"id": "a0.s0.w1", "token": "took", "space": true},
+    {"id": "a0.s0.w2", "token": "the", "space": true},
+    {"id": "a0.s0.w3", "token": "bus", "space": true},
+    {"id": "a0.s0.w4", "token": "form", "space": true},
+    {"id": "a0.s0.w5", "token": "ground", "space": true},
+    {"id": "a0.s0.w6", "token": "station", "space": false},
+    {"id": "a0.s0.w7", "token": ".", "space": false}
+  ]
+}
+              </pre>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+<br>
+  <div class="container">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header">
+            <h2>Result format</h2>
+          </div>
+          <div class="card-body">
+            <p class="body-text">
+              For submitting the calculated results of a benchmark you must provide the data using the subsequent format.
+              We will first provide the general structure, followed by a brief description of each of the parameters.
+              At the bottom of the page we will further give a small example.
+
+              <pre>
+{
+  "predictions": [
+    {
+      "id": "a{ARTICLE_ID}.s{SENTENCE_ID}.w{WORD_ID}",
+      "token": "{PROPOSED_TOKEN}",
+      "suggestions": ["{SUGGESTION_1}", ..., "{SUGGESTION_N}"],
+      "space": "true/false",
+    },
+    ...
+  ]
+}
+              </pre>
+            </p>
+
+            <p class="body-text">
+              <h4><i>id</i></h4>
+              The unique identifier for tokens. The first numberic portion <i>${ARTICLE_ID}</i> describes the article number, 
+              the second portion <i>s{SENTENCE_ID}</i> describes the sentence number <i>{SENTENCE_ID}</i> while the third portion <i>w{WORD_ID}</i>
+              describes the a word within the sentence. For all, articles, sentences, and words, the indexing starts
+              with the number 0.
+            </p>
+            <p class="body-text">
+              <h4><i>token</i></h4>
+              Usually the first and only token that is returned by a spelling correction tool.
+            </p>
+            <p class="body-text">
+              <h4><i>suggestions</i></h4>
+              If your spelling correction tool is not certain about how to adequately correct a word
+              and provides a list of suggestions, all additional suggestions can be listed here.
+              If there is just a single token as correction candidate it have to be given by the <i>token</i>
+              parameter. If suggestion scoring is supported by your program the suggestions should be sorted
+              in descending order.
+            </p>
+            <p class="body-text">
+              <h4><i>space</i></h4>
+              Determines whether a space should be placed after that element.
+            </p>
+
+            <hr>
+
+            <p class="body-text">
+              The data will be
+            </p>
+
+            <hr>
+
+            <h4>Example</h4>
+
+            <p class="body-text">
+              Let's assume we have the sentence "<i><b>I took the bus form ground station.</b></i>" as input sentence.
+              One possible prediction would have the following format:
+            </p>
+            <p class="body-text">
+              <pre>
+{
+  "predictions": [
+    {"id": "a0.s0.w0", "token": "I", "suggestions": [], "space": true},
+    {"id": "a0.s0.w1", "token": "took", "suggestions": ["cook"], "space": true},
+    {"id": "a0.s0.w2", "token": "the", "suggestions": [], "space": true},
+    {"id": "a0.s0.w3", "token": "bus", "suggestions": [], "space": true},
+    {"id": "a0.s0.w4", "token": "form", "suggestions": ["from", "farm", "firm"], "space": true},
+    {"id": "a0.s0.w5", "token": "ground", "suggestions": [], "space": true},
+    {"id": "a0.s0.w6", "token": "station", "suggestions": ["stadium"], "space": false},
+    {"id": "a0.s0.w7", "token": ".", "suggestions": [], "space": false}
+  ]
+}
+              </pre>
+            </p>
+
+            <div class="alert alert-info" role="alert">
+              <h4 class="alert-heading">Submission</h4>
+              <hr>
+              <p>Keep in mind to submit a single json file with the previously proposed format.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script type="text/javascript">
+(function(d) {
+
+  stylizePreElements = function() {
+    var preElements = document.getElementsByTagName("pre");
+    for (i = 0; i < preElements.length; ++i) {
+      var preElement = preElements[i];
+      preElement.className += "prettyprint";
+    }
+  };
+
+  injectPrettifyScript = function() {
+    var scriptElement = document.createElement('script');
+    scriptElement.setAttribute("src", "https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js");
+    document.head.appendChild(scriptElement);
+  };
+
+  stylizePreElements();
+  injectPrettifyScript();
+
+})(document)
+</script>
+{% endblock %}

@@ -1,0 +1,131 @@
+[
+  {
+    "model": "workbench.benchmark",
+    "pk": 1,
+    "fields": {
+      "benchmark_name": "Smallish",
+      "download_file": "/data/data/benchmarks/en_US/smallish_benchmark_source.json",
+      "groundtruth_file": "/data/data/benchmarks/en_US/smallish_benchmark_groundtruth.json",
+      "raw_file": "/data/data/benchmarks/en_US/smallish_benchmark_raw.txt",
+      "lang_code": "en_US"
+    }
+  },
+  {
+    "model": "workbench.benchmark",
+    "pk": 2,
+    "fields": {
+      "benchmark_name": "Tiny",
+      "download_file": "/data/data/benchmarks/en_US/tiny_benchmark_source.json",
+      "groundtruth_file": "/data/data/benchmarks/en_US/tiny_benchmark_groundtruth.json",
+      "raw_file": "/data/data/benchmarks/en_US/tiny_benchmark_raw.txt",
+      "lang_code": "en_US"
+    }
+  },
+  {
+    "model": "workbench.benchmark",
+    "pk": 3,
+    "fields": {
+      "benchmark_name": "Medium",
+      "download_file": "/data/data/benchmarks/en_US/medium_benchmark_source.json",
+      "groundtruth_file": "/data/data/benchmarks/en_US/medium_benchmark_groundtruth.json",
+      "raw_file": "/data/data/benchmarks/en_US/medium_benchmark_raw.txt",
+      "lang_code": "en_US"
+    }
+  },
+  {
+    "model": "workbench.program",
+    "pk": 1,
+    "fields":
+    {
+      "user": 1,
+      "program_name": "LanguageTool",
+      "developer": "LanguageTool",
+      "url": "http://www.aspell.org",
+      "is_baseline": true
+    }
+  },
+  {
+    "model": "workbench.program",
+    "pk": 2,
+    "fields":
+    {
+      "user": 1,
+      "program_name": "PyEnchant",
+      "developer": "PyEnchant",
+      "url": "http://www.aspell.org",
+      "is_baseline": true
+    }
+  },
+  {
+    "model": "workbench.program",
+    "pk": 3,
+    "fields":
+    {
+      "user": 1,
+      "program_name": "Aspell",
+      "developer": "Aspell",
+      "url": "http://www.aspell.org",
+      "is_baseline": true
+    }
+  },
+  {
+    "model": "workbench.program",
+    "pk": 4,
+    "fields":
+    {
+      "user": 1,
+      "program_name": "HunSpell",
+      "developer": "HunSpell",
+      "url": "http://www.aspell.org",
+      "is_baseline": true
+    }
+  },
+  {
+    "model": "workbench.program",
+    "pk": 5,
+    "fields":
+    {
+      "user": 1,
+      "program_name": "MaShape",
+      "developer": "Kong Inc. 2019",
+      "url": "https://rapidapi.com/montanaflynn/api/spellcheck",
+      "is_baseline": true
+    }
+  },
+  {
+    "model": "workbench.program",
+    "pk": 6,
+    "fields":
+    {
+      "user": 1,
+      "program_name": "Norvig",
+      "developer": "Peter Norvig",
+      "url": "http://norvig.com/spell-correct.html",
+      "is_baseline": true
+    }
+  },
+  {
+    "model": "workbench.program",
+    "pk": 7,
+    "fields":
+    {
+      "user": 1,
+      "program_name": "NGram",
+      "developer": "Markus Näther",
+      "url": "http://ad-git.informatik.uni-freiburg.de",
+      "is_baseline": true
+    }
+  },
+  {
+    "model": "workbench.program",
+    "pk": 8,
+    "fields":
+    {
+      "user": 1,
+      "program_name": "GrammarBot",
+      "developer": "GrammarBot",
+      "url": "https://www.grammarbot.io/",
+      "is_baseline": true
+    }
+  }
+]

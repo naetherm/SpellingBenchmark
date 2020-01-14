@@ -1,0 +1,32 @@
+{% extends 'workbench/base.html' %}
+{% load bootstrap4 %}
+
+{% block content %}
+<br>
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="float-left">List of Benchmarks</h3>
+          {% if user.is_superuser %}
+          <p class="card-text float-right">
+            <a href="{% url 'workbench:initialize_internal_tables' %}"><button type="button" class="btn btn-primary">Initialize Tables</button></a>
+            <a href="{% url 'workbench:populate_baselines' %}"><button type="button" class="btn btn-primary">Populate Baselines</button></a>
+          </p>
+          {% endif %}
+        </div>
+
+        <div class="card-body">
+          <p class="card-text">List of all benchmarks, currently available.</p>
+
+          <ul class="list-group">
+            {% for benchmark in benchmark_list %}
+            <li class="list-group-item"><a href="{% url 'workbench:benchmark' benchmark.id %}">{{ benchmark.benchmark_name }}</a></li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% endblock %}

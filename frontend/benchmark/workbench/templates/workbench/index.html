@@ -1,0 +1,64 @@
+{% extends 'workbench/base.html' %}
+{% load bootstrap4 %}
+
+{% block content %}
+<br>
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card">
+
+        <div class="card-body">
+          <h3>Spelling Error Detection and Correction</h3>
+          <p class="card-text">
+            A benchmark suite for comparing different programs, regarding the task of spelling error detection and correction.
+
+          </p>
+          <p class="card-text">
+
+            For a list of all, current by default enabled and registered, programs take a look at the corresponding section under <a href="{% url 'workbench:programs' %}">Programs</a>.
+            <br>
+            For a list of all available benchmarks take a look at the corresponding section unter <a href="{% url 'workbench:benchmarks' %}">Benchmarks</a>.
+          </p>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<br>
+<div class="container">
+  <div class="row">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h3>Programs</h3>
+        </div>
+        <div class="card-body">
+          List of all programs that are currently registered in the system:
+          <ul>
+            {% for program in programs %}
+            <li><a href="{% url 'workbench:program' program.id %}">{{ program.program_name }}</a></li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h3>Benchmarks</h3>
+        </div>
+        <div class="card-body">
+          List of all benchmarks that are currently registered in the system:
+          <ul>
+            {% for benchmark in benchmarks %}
+            <li><a href="{% url 'workbench:benchmark' benchmark.id %}">{{ benchmark.benchmark_name }}</a></li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

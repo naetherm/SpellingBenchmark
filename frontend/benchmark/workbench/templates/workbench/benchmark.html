@@ -1,0 +1,583 @@
+{% extends 'workbench/base.html' %}
+{% load bootstrap4 %}
+
+{% block content %}
+<div id="legend" class="fixed hidden">
+  <div id="hide_toggle" class="btn btn-sm btn-primary float-right">Hide</div>
+  <div id="legend_hideable">
+    <h5>Legend</h5>
+    <mark class="legend NONE">NONE</mark><br>
+    <mark class="legend NON_WORD">NON_WORD</mark><br>
+    <mark class="legend REAL_WORD">REAL_WORD</mark><br>
+    <mark class="legend SPLIT">SPLIT</mark><br>
+    <mark class="legend HYPHENATION">HYPHENATION</mark><br>
+    <mark class="legend CONCATENATION">CONCATENATION</mark><br>
+    <mark class="legend CAPITALISATION">CAPITALISATION</mark><br>
+    <mark class="legend ARCHAIC">ARCHAIC</mark><br>
+    <mark class="legend REPEAT">REPEAT</mark><br>
+    <mark class="legend PUNCTUATION">PUNCTUATION</mark><br>
+    <mark class="legend MENTION_MISMATCH">MENTION_MISMATCH</mark><br>
+    <mark class="legend TENSE">TENSE</mark><br>
+    <mark class="legend COMPOUND_HYPHEN">COMPOUND_HYPHEN</mark><br>
+  </div>
+</div>
+<br>
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="float-left">{{ benchmark.benchmark_name }}</h2>
+
+          <p class="body-text float-right position-static">
+            {% if user.is_superuser %}
+            <a href="{% url 'workbench:populate_baseline' benchmark.id  %}"><button type="button" class="btn btn-warning">Populate</button></a>
+            {% endif %}
+            <a href="{% url 'workbench:download_data' benchmark.id  %}"><button type="button" class="btn btn-primary">Download data</button></a>
+            <a href="{% url 'workbench:upload_results' benchmark.id  %}"><button type="button" class="btn btn-success">Upload results</button></a>
+            <a href="{% url 'workbench:result_format' %}"><button type="button" class="btn btn-danger">Format<span class="glyphicon glyphicon-question-sign"></span></button></a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-12">
+      <ul class="nav nav-tabs" id="benchmarkTab" role="tablist">
+        <li class="nav-item">
+          <a class="nav-link active" id="score-tab" data-toggle="tab" href="#score" role="tab" aria-controls="score" aria-selected="true">Score</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="detailed-tab" data-toggle="tab" href="#detailed" role="tab" aria-controls="detailed" aria-selected="true">Detailed</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="viz_sentence-tab" data-toggle="tab" href="#viz_sentence" role="tab" aria-controls="viz_sentence" aria-selected="true">Viz per Sentence</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="viz_tool-tab" data-toggle="tab" href="#viz_tool" role="tab" aria-controls="viz_tool" aria-selected="true">Viz per Tool</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div class="row">
+      <div class="col-md-12">
+      <div class="tab-content" id="benchmarkTabContent">
+        <div class="tab-pane fade show active" id="score" role="tabpanel" aria-labelledby="score-tab">
+          <table class="table table-sm">
+            <thead>
+              <tr>
+                <th scope="col">Metric</th>
+                {% for result in results %}
+                <th scope="col">{{ result.program.program_name }}</th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">EScore</th>
+                {% for result in results %}
+                <th>{{ result.equalScore|floatformat:4 }}</th>
+                {% endfor %}
+              </tr>
+
+              <tr>
+                <th scope="row">PScore</th>
+                {% for result in results %}
+                <th>{{ result.penalizedScore|floatformat:4 }}</th>
+                {% endfor %}
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="card-text">
+            <b>EScore:</b> The fraction of corrected word to the number of total words assigned to a specific error category (including NONE). <br>
+            <b>PScore:</b> The fraction of corrected word to the number of total words assigned to a specific error category (excluding NONE). The resulting value is the multiplied with the fraction of correctly predicted NONEs and by that penalised.
+          </div>
+        </div>
+        <div class="tab-pane fade" id="detailed" role="tabpanel" aria-labelledby="detailed-tab">
+          <div class="row">
+            <div class="col-md-12">
+              <h2>Global Evaluation Values</h2>
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">WAcc</th>
+                    <th scope="col">SAcc (C/T(C))</th>
+                    <th scope="col">Detection (P,R,F)</th>
+                    <th scope="col">Correction (P,R,F)</th>
+                    <th scope="col">Num Errors/#Words</th>
+                    <th scope="col">Detected Errors</th>
+                    <th scope="col">Corrected Errors</th>
+                    <th scope="col">Suggestion Adequacy</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for result in results %}
+                  <tr>
+                    <th scope="row">{{ result.program.program_name }}</th>
+                    <td>{{ result.wordAccuracy|floatformat:4 }}</td>
+                    <td>{{ result.sequenceAccuracy|floatformat:4 }} ({{ result.numCorrectSentences }}/{{ result.numSentences }} ({{ result.numErrorFreeSentences }}))</td>
+                    <td>{{ result.detectionPrecision|floatformat:2 }}, {{ result.detectionRecall|floatformat:2 }}, {{ result.detectionFScore|floatformat:2 }}</td>
+                    <td>{{ result.correctionPrecision|floatformat:2 }}, {{ result.correctionRecall|floatformat:2 }}, {{ result.correctionFScore|floatformat:2 }}</td>
+                    <td>{{ result.numErrors }}/{{ result.numTotalWords }}</td>
+                    <td>{{ result.detectedErrors }}</td>
+                    <td>{{ result.correctedErrors }}</td>
+                    <td>{{ result.suggestionAdequacy|floatformat:4 }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <h2>NONE</h2>
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Detection(P,R,F)</th>
+                    <th scope="col">Correction(P,R,F)</th>
+                    <th scope="col">Correction/Found/Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for key, entry in NONE.items %}
+                  <tr>
+                    <th scope="row">{{ key }}</th>
+                    <td>{{ entry.detectionPrecision|floatformat:2 }}, {{ entry.detectionRecall|floatformat:2 }}, {{ entry.detectionFScore|floatformat:2 }}</td>
+                    <td>{{ entry.correctionPrecision|floatformat:2 }}, {{ entry.correctionRecall|floatformat:2 }}, {{ entry.correctionFScore|floatformat:2 }}</td>
+                    <td>{{ entry.corrected}} / {{ entry.found}} / {{ entry.total }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <div class="col-md-6">
+              <h2>NON_WORD</h2>
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Detection(P,R,F)</th>
+                    <th scope="col">Correction(P,R,F)</th>
+                    <th scope="col">Correction/Found/Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for key, entry in NON_WORD.items %}
+                  <tr>
+                    <th scope="row">{{ key }}</th>
+                    <td>{{ entry.detectionPrecision|floatformat:2 }}, {{ entry.detectionRecall|floatformat:2 }}, {{ entry.detectionFScore|floatformat:2 }}</td>
+                    <td>{{ entry.correctionPrecision|floatformat:2 }}, {{ entry.correctionRecall|floatformat:2 }}, {{ entry.correctionFScore|floatformat:2 }}</td>
+                    <td>{{ entry.corrected}} / {{ entry.found}} / {{ entry.total }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <h2>REAL_WORD</h2>
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Detection(P,R,F)</th>
+                    <th scope="col">Correction(P,R,F)</th>
+                    <th scope="col">Correction/Found/Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for key, entry in REAL_WORD.items %}
+                  <tr>
+                    <th scope="row">{{ key }}</th>
+                    <td>{{ entry.detectionPrecision|floatformat:2 }}, {{ entry.detectionRecall|floatformat:2 }}, {{ entry.detectionFScore|floatformat:2 }}</td>
+                    <td>{{ entry.correctionPrecision|floatformat:2 }}, {{ entry.correctionRecall|floatformat:2 }}, {{ entry.correctionFScore|floatformat:2 }}</td>
+                    <td>{{ entry.corrected}} / {{ entry.found}} / {{ entry.total }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <div class="col-md-6">
+              <h2>SPLIT</h2>
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Detection(P,R,F)</th>
+                    <th scope="col">Correction(P,R,F)</th>
+                    <th scope="col">Correction/Found/Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for key, entry in SPLIT.items %}
+                  <tr>
+                    <th scope="row">{{ key }}</th>
+                    <td>{{ entry.detectionPrecision|floatformat:2 }}, {{ entry.detectionRecall|floatformat:2 }}, {{ entry.detectionFScore|floatformat:2 }}</td>
+                    <td>{{ entry.correctionPrecision|floatformat:2 }}, {{ entry.correctionRecall|floatformat:2 }}, {{ entry.correctionFScore|floatformat:2 }}</td>
+                    <td>{{ entry.corrected}} / {{ entry.found}} / {{ entry.total }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <h2>HYPHENATION</h2>
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Detection(P,R,F)</th>
+                    <th scope="col">Correction(P,R,F)</th>
+                    <th scope="col">Correction/Found/Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for key, entry in HYPHENATION.items %}
+                  <tr>
+                    <th scope="row">{{ key }}</th>
+                    <td>{{ entry.detectionPrecision|floatformat:2 }}, {{ entry.detectionRecall|floatformat:2 }}, {{ entry.detectionFScore|floatformat:2 }}</td>
+                    <td>{{ entry.correctionPrecision|floatformat:2 }}, {{ entry.correctionRecall|floatformat:2 }}, {{ entry.correctionFScore|floatformat:2 }}</td>
+                    <td>{{ entry.corrected}} / {{ entry.found}} / {{ entry.total }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <div class="col-md-6">
+              <h2>CONCATENATION</h2>
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Detection(P,R,F)</th>
+                    <th scope="col">Correction(P,R,F)</th>
+                    <th scope="col">Correction/Found/Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for key, entry in CONCATENATION.items %}
+                  <tr>
+                    <th scope="row">{{ key }}</th>
+                    <td>{{ entry.detectionPrecision|floatformat:2 }}, {{ entry.detectionRecall|floatformat:2 }}, {{ entry.detectionFScore|floatformat:2 }}</td>
+                    <td>{{ entry.correctionPrecision|floatformat:2 }}, {{ entry.correctionRecall|floatformat:2 }}, {{ entry.correctionFScore|floatformat:2 }}</td>
+                    <td>{{ entry.corrected}} / {{ entry.found}} / {{ entry.total }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <h2>CAPITALISATION</h2>
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Detection(P,R,F)</th>
+                    <th scope="col">Correction(P,R,F)</th>
+                    <th scope="col">Correction/Found/Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for key, entry in CAPITALISATION.items %}
+                  <tr>
+                    <th scope="row">{{ key }}</th>
+                    <td>{{ entry.detectionPrecision|floatformat:2 }}, {{ entry.detectionRecall|floatformat:2 }}, {{ entry.detectionFScore|floatformat:2 }}</td>
+                    <td>{{ entry.correctionPrecision|floatformat:2 }}, {{ entry.correctionRecall|floatformat:2 }}, {{ entry.correctionFScore|floatformat:2 }}</td>
+                    <td>{{ entry.corrected}} / {{ entry.found}} / {{ entry.total }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <div class="col-md-6">
+              <h2>ARCHAIC</h2>
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Detection(P,R,F)</th>
+                    <th scope="col">Correction(P,R,F)</th>
+                    <th scope="col">Correction/Found/Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for key, entry in ARCHAIC.items %}
+                  <tr>
+                    <th scope="row">{{ key }}</th>
+                    <td>{{ entry.detectionPrecision|floatformat:2 }}, {{ entry.detectionRecall|floatformat:2 }}, {{ entry.detectionFScore|floatformat:2 }}</td>
+                    <td>{{ entry.correctionPrecision|floatformat:2 }}, {{ entry.correctionRecall|floatformat:2 }}, {{ entry.correctionFScore|floatformat:2 }}</td>
+                    <td>{{ entry.corrected}} / {{ entry.found}} / {{ entry.total }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <h2>REPEAT</h2>
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Detection(P,R,F)</th>
+                    <th scope="col">Correction(P,R,F)</th>
+                    <th scope="col">Correction/Found/Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for key, entry in REPEAT.items %}
+                  <tr>
+                    <th scope="row">{{ key }}</th>
+                    <td>{{ entry.detectionPrecision|floatformat:2 }}, {{ entry.detectionRecall|floatformat:2 }}, {{ entry.detectionFScore|floatformat:2 }}</td>
+                    <td>{{ entry.correctionPrecision|floatformat:2 }}, {{ entry.correctionRecall|floatformat:2 }}, {{ entry.correctionFScore|floatformat:2 }}</td>
+                    <td>{{ entry.corrected}} / {{ entry.found}} / {{ entry.total }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <div class="col-md-6">
+              <h2>PUNCTUATION</h2>
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Detection(P,R,F)</th>
+                    <th scope="col">Correction(P,R,F)</th>
+                    <th scope="col">Correction/Found/Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for key, entry in PUNCTUATION.items %}
+                  <tr>
+                    <th scope="row">{{ key }}</th>
+                    <td>{{ entry.detectionPrecision|floatformat:2 }}, {{ entry.detectionRecall|floatformat:2 }}, {{ entry.detectionFScore|floatformat:2 }}</td>
+                    <td>{{ entry.correctionPrecision|floatformat:2 }}, {{ entry.correctionRecall|floatformat:2 }}, {{ entry.correctionFScore|floatformat:2 }}</td>
+                    <td>{{ entry.corrected}} / {{ entry.found}} / {{ entry.total }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <h2>MENTION_MISMATCH</h2>
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Detection(P,R,F)</th>
+                    <th scope="col">Correction(P,R,F)</th>
+                    <th scope="col">Correction/Found/Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for key, entry in MENTION_MISMATCH.items %}
+                  <tr>
+                    <th scope="row">{{ key }}</th>
+                    <td>{{ entry.detectionPrecision|floatformat:2 }}, {{ entry.detectionRecall|floatformat:2 }}, {{ entry.detectionFScore|floatformat:2 }}</td>
+                    <td>{{ entry.correctionPrecision|floatformat:2 }}, {{ entry.correctionRecall|floatformat:2 }}, {{ entry.correctionFScore|floatformat:2 }}</td>
+                    <td>{{ entry.corrected}} / {{ entry.found}} / {{ entry.total }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <div class="col-md-6">
+              <h2>TENSE</h2>
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Detection(P,R,F)</th>
+                    <th scope="col">Correction(P,R,F)</th>
+                    <th scope="col">Correction/Found/Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for key, entry in TENSE.items %}
+                  <tr>
+                    <th scope="row">{{ key }}</th>
+                    <td>{{ entry.detectionPrecision|floatformat:2 }}, {{ entry.detectionRecall|floatformat:2 }}, {{ entry.detectionFScore|floatformat:2 }}</td>
+                    <td>{{ entry.correctionPrecision|floatformat:2 }}, {{ entry.correctionRecall|floatformat:2 }}, {{ entry.correctionFScore|floatformat:2 }}</td>
+                    <td>{{ entry.corrected}} / {{ entry.found}} / {{ entry.total }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <h2>COMPOUND_HYPHEN</h2>
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Detection(P,R,F)</th>
+                    <th scope="col">Correction(P,R,F)</th>
+                    <th scope="col">Correction/Found/Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for key, entry in COMPOUND_HYPHEN.items %}
+                  <tr>
+                    <th scope="row">{{ key }}</th>
+                    <td>{{ entry.detectionPrecision|floatformat:2 }}, {{ entry.detectionRecall|floatformat:2 }}, {{ entry.detectionFScore|floatformat:2 }}</td>
+                    <td>{{ entry.correctionPrecision|floatformat:2 }}, {{ entry.correctionRecall|floatformat:2 }}, {{ entry.correctionFScore|floatformat:2 }}</td>
+                    <td>{{ entry.corrected}} / {{ entry.found}} / {{ entry.total }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <div class="col-md-6">
+            </div>
+          </div>
+        </div>
+        <div class="tab-pane fade" id="viz_sentence" role="tabpanel" aria-labelledby="viz_sentence-tab">
+          <div class="row">
+            <div class="col-md-12">
+              <select class="custom-select custom-select-sm" id="sentenceVizSelect">
+                <option value="-1" selected>Choose the sentence to visualize for all tools ...</option>
+                {% for sentence in sentences %}
+                <option value="{{ sentence.aidx }}_{{ sentence.sidx }}">{{ sentence.display }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          {% for program in programs %}
+          <div class="row">
+            <div id="{{program.program_name}}" class="program {{program.program_name}}">
+              <div class="container-wrapper">
+                <svg class="svg-container"></svg>
+                <div class="text-container">
+                  <div class="text"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+        </div>
+        <div class="tab-pane fade" id="viz_tool" role="tabpanel" aria-labelledby="viz_tool-tab">
+          <!-- The tool selection -->
+          <div class="row">
+            <div class="col-md-12">
+              <select class="custom-select custom-select-sm" id="programVizSelect">
+                <option value="-1" selected>Choose the program to visualize all sentences for ...</option>
+                {% for program in programs %}
+                <option value="{{program.id}}">{{program.program_name}}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <!-- One row per sentence -->
+          {% for sentence in sentences %}
+          <div class="row">
+            <div id="sentence{{ sentence.aidx }}_{{ sentence.sidx }}" class="sentence{{sentence.aidx}}_{{sentence.sidx}}">
+              <div class="container-wrapper">
+                <svg class="svg-container"></svg>
+                <div class="text-container"><div class="text"></div></div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+{% endblock %}
+
+{% block extra_js %}
+<script type="text/javascript">
+  var program_names = {{ js_program_names|safe }};
+  var benchmarkVizualization = new BenchmarkViz(program_names);
+  var programVizualization = new ProgramViz();
+  var sentenceSelection = document.getElementById('sentenceVizSelect');
+  var programSelection = document.getElementById('programVizSelect');
+  sentenceSelection.onchange = function() {
+    if (typeof this.value !== "undefined" && this.value != -1) {
+      var temp_ = this.value.split("_");
+      var sidx_ = temp_[1];
+      var aidx_ = temp_[0];
+      $.ajax({
+        url: '{% url "workbench:get_sentences_and_prediction_for_idx" %}',
+        data: {
+          'benchmark': '{{ benchmark.id }}',
+          'aidx': aidx_,
+          'value': sidx_
+        },
+        dataType: 'json',
+        success: function (data) {
+          if (data.found_entries) {
+            var sentences_ = JSON.parse(data.sentence);
+            var predictions_ = JSON.parse(data.predictions);
+            benchmarkVizualization.render(program_names, sidx_, sentences_, predictions_);
+          }
+        }
+      });
+    }
+  };
+  programSelection.onchange = function() {
+    if (typeof this.value !== "undefined" && this.value != -1) {
+      var program_ = this.value;
+      var program_name_ = this.options[this.selectedIndex].text;
+      $.ajax({
+        url: '{% url "workbench:get_sentences_and_prediction_for_program" %}',
+        data: {
+          'benchmark': '{{ benchmark.id }}',
+          'program': program_
+        },
+        dataType: 'json',
+        success: function (data) {
+          if (data.found_entries) {
+            var sentences_ = JSON.parse(data.sentences);
+            var predictions_ = JSON.parse(data.predictions);
+            programVizualization.render(program_name_, sentences_, predictions_);
+          }
+        }
+      });
+    }
+  }
+</script>
+<script type="text/javascript">
+$(document).ready(function(){
+  $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+    var target = $(e.target).attr("href");
+    console.log("target:");
+    console.log(target);
+    if ((target == '#viz_sentence') || (target == '#viz_tool')) {
+      $('#legend').removeClass('hidden');
+    } else {
+      $('#legend').addClass('hidden');
+    }
+  });
+});
+</script>
+<script type="text/javascript">
+$( "#hide_toggle" ).click(function() {
+  $( "#legend_hideable" ).toggle( "fast", function() {
+
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,18 @@
+{
+	"authors": [
+		"Markus Näther"
+	],
+	"copyright": "Copyright © 2019, Markus Näther",
+	"description": "Evaluator script written in D.",
+	"license": "MIT",
+	"name": "devaluator",
+	"targetType": "executable",
+	"dflags": [],
+
+	"dependencies": {
+		"darg": "~>0.1.0",
+		"snck": "~>0.0.4",
+		"vibe-d": "0.8.6",
+		"dutility": { "path": "../dutility" }
+	}
+}

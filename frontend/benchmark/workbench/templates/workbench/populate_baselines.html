@@ -1,0 +1,28 @@
+{% extends 'workbench/base.html' %}
+{% load bootstrap4 %}
+
+{% block content %}
+<br>
+<div class="jumbotron jumbotron-fluid">
+  <div class="container">
+    <h1 class="display-4">Populating baselines</h1>
+    <p class="lead">
+      <div class="card-text">
+        <h5 class="float-left">Programs to populate:</h5>
+        {% for p in programs %}
+        <span class="badge badge-primary">{{ p.program_name}}</span>
+        {% endfor %}
+      </div>
+      <p class="float-none"></p>
+      <div class="card-text">
+        <h5 class="float-left">Benchmarks to populate: </h5>
+        {% for b in benchmarks %}
+        <span class="badge badge-primary">{{ b.benchmark_name}}</span>
+        {% endfor %}
+      </div>
+    </p>
+    <hr>
+  </div>
+</div>
+
+{% endblock %}

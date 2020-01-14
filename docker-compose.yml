@@ -1,0 +1,43 @@
+version: '3'
+services:
+  evaluator:
+    build:
+      context: ./
+      dockerfile: devaluator/Dockerfile
+    restart: always
+    expose:
+      - "1338"
+    ports:
+      - "1338:1338"
+    networks:
+      - backend
+    volumes:
+      - @@@DATA_PATH@@@:/data/
+  db:
+    image: postgres
+    restart: always
+    networks:
+      - backend
+    expose:
+      - "5432"
+    ports:
+      - "5432:5432"
+  web:
+    build:
+      context: ./frontend/
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "8000:8000"
+    networks:
+      - backend
+    links:
+      - db
+      - evaluator
+    depends_on:
+      - db
+      - evaluator
+    volumes:
+      - @@@DATA_PATH@@@:/data/
+networks:
+  backend:

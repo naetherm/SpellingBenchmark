@@ -1,0 +1,41 @@
+{% extends 'workbench/master.html' %}
+
+{% load static %}
+
+
+{% load staticfiles %}
+
+<script src="{% static "workbench/vendor/jquery/jquery.js" %}"></script>
+<script src="{% static "workbench/vendor/canvasjs/canvasjs.min.js" %}"></script>
+
+
+{% load bootstrap4 %}
+
+{% block bootstrap4_content %}
+
+<script src="{% static "workbench/demo.js" %}"></script>
+<link rel="stylesheet" type="text/css" href="{% static "workbench/style.css" %}">
+
+  {% include 'workbench/navigation.html' %}
+
+  <div class="container">
+
+    {% autoescape off %}{% bootstrap_messages %}{% endautoescape %}
+
+    {% block content %}
+    {% endblock %}
+  </div>
+
+  {% block extra_js %}
+  {% endblock %}
+
+  <footer class="page-footer">
+      <div class="container-fluid text-center bg-dark">
+          <div class="row">
+            <div class="col-md-12">
+              Copyright © 2019 Markus Näther
+            </div>
+          </div>
+      </div>
+  </footer>
+{% endblock %}

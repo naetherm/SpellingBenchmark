@@ -1,0 +1,20 @@
+{% extends 'workbench/base.html' %}
+{% load bootstrap4 %}
+
+{% block content %}
+<br>
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header">
+          <h2>{{ program.program_name }}</h2>
+        </div>
+        <div class="card-body">
+          <p class="card-text"><b>Developer:</b> {{ program.developer }}</p>
+          <p class="card-text"><b>URL:</b> <a href="{{ program.url }}">{{ program.url }}</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% endblock %}

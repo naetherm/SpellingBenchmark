@@ -1,0 +1,29 @@
+{% extends 'workbench/base.html' %}
+{% load bootstrap4 %}
+
+{% block content %}
+<br>
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header">
+          List of Programs
+          <p class="card-text float-right">
+            <a href="{% url 'workbench:add_program' %}"><button type="button" class="btn btn-primary">Add Program</button></a>
+          </p>
+        </div>
+
+        <div class="card-body">
+          <p class="card-text">List of all programs, currently registered and compared</p>
+
+          <ul class="list-group">
+            {% for program in program_list %}
+            <li class="list-group-item"><a href="{% url 'workbench:program' program.id %}">{{ program.program_name }}</a></li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% endblock %}

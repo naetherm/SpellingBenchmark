@@ -1,0 +1,23 @@
+{% extends 'workbench/base.html' %}
+{% load bootstrap4 %}
+
+{% block content %}
+<br>
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header">
+          {{ user.username }}
+          <p class="card-text float-right">
+            <a href="{% url 'workbench:add_program' %}"><button type="button" class="btn btn-primary">Add Program</button></a>
+          </p>
+        </div>
+
+        <div class="card-body">
+          Programs:
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% endblock %}

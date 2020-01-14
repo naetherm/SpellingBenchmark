@@ -1,0 +1,11 @@
+{
+	"authors": [
+		"Markus Naether"
+	],
+	"copyright": "Copyright © 2019, Markus Naether",
+	"description": "Noise generator.",
+	"license": "MIT",
+	"name": "dutility",
+	"targetType": "library",
+	"dflags": []
+}
