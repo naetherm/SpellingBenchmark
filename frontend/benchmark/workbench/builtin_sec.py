@@ -27,12 +27,13 @@ class SourceInternalArticle(object):
 
 def build_article_information(input):
   json_ = json.loads(input)
-  articles = set()
+  num_articles = 0
   for t in json_["tokens"]:
     nums_ = re.findall('\d+', t['id'], re.UNICODE)
-    articles.add(int(nums_[0]))
-  # count sentences
-  num_articles = len(articles)
+    #articles.add(int(nums_[0]))
+    if num_articles < int(nums_[0]):
+      num_articles = int(nums_[0])
+  num_articles = num_articles + 1
   #print(f"detected {num_articles} in source file, collect number of sentences")
   num_sentences = [set() for _ in range(num_articles)]
   for t in json_["tokens"]:
@@ -126,18 +127,18 @@ def evaluate_aspell_builtin(input, lang_code):
                 suggestions = sugg[1:]
         except:
           token = t
-        
+
         if token == None: # is none, so tokens is filled with multiple elements -> splitted word
           num_tokens = len(multi_tokens)
-          for idx, t in enumerate(multi_tokens):
+          for idx, tt in enumerate(multi_tokens):
             result_content += generate_token_information(
               aidx,
               sidx,
               tidx+idx,
-              t,
+              tt,
               suggestions,
               spaces[tidx],
-              tidx < (len(tokens) - 1)
+              tidx < (len(tokens)+shift - 1)
             )
           shift += num_tokens - 1
         else:
@@ -148,10 +149,11 @@ def evaluate_aspell_builtin(input, lang_code):
             token,
             suggestions,
             spaces[tidx],
-            tidx < (len(tokens) - 1)
+            tidx < (len(tokens)+shift - 1)
           )
-      if (aidx < (len(input) - 1)) or (sidx < len(article.sentences) - 1):
-        result_content += ",\n"
+      if ((aidx < (len(input) - 1)) or (sidx < len(article.sentences) - 1)):
+        if result_content[-1] != "," and result_content[-2] != ",":
+          result_content += ",\n"
 
   result_content += "  ]\n}"
 
@@ -557,7 +559,7 @@ def evaluate_pyenchant_builtin(input, lang_code):
       shift = 0
       for tidx, token in enumerate(tokens):
         token = token.strip()
-        
+
         if " " in token and ((len(token.split(" ")[0]) != 0) and (len(token.split(" ")[0]) != 0)):
           realNumTokens += len(token.split(" ")) - 1
           for tt in token.split(" "):
@@ -714,7 +716,7 @@ def evaluate_grammarbot_builtin(input, lang_code):
             if (len(repls) > 1):
               suggestions[tidxs[0]] = []
               for v in repls[1:]:
-                suggestions[tidxs[0]].append(v)#.replace("\\", "\\\\").replace("\"", "\\\\\""))
+                suggestions[tidxs[0]].append(v.replace("\\", "\\\\").replace("\"", "\\\\\""))
           else:
             pass
       except:

@@ -6,7 +6,7 @@ def call_regex(src):
   One place for the regex.
   '''
   #return re.findall(r"(?:[\w]+(?:[-]+[\w]+)+)|(?:[\w]+(?:[']+[\w])+)|\b[_]|(?:[_]*[\w]+(?=_\b))|\w+|[^\w\s]", src, re.UNICODE)
-  tokens = re.findall(r"(?:\d+,\d+)|(?:[\w'\u0080-\u9999]+(?:[-]+[\w'\u0080-\u9999]+)+)|(?:[\w\u0080-\u9999]+(?:[']+[\w\u0080-\u9999]+)+)|\b[_]|(?:[_]*[\w\u0080-\u9999]+(?=_\b))|(?:[\w\u0080-\u9999]+)|[^\w\s\p{Z}]", src, re.UNICODE)
+  tokens = re.findall(r"(?:\d+[,.]\d+)|(?:[\w'\u0080-\u9999]+(?:[-]+[\w'\u0080-\u9999]+)+)|(?:[\w\u0080-\u9999]+(?:[']+[\w\u0080-\u9999]+)+)|\b[_]|(?:[_]*[\w\u0080-\u9999]+(?=_\b))|(?:[\w\u00A1-\u9999]+)|[^\w\s\u00A0\p{Z}]", src, re.UNICODE)
 
   spaces = []
   char_counter = 0

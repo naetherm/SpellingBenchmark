@@ -1,5 +1,15 @@
 version: '3'
 services:
+  generator:
+    build:
+      context: ./
+      dockerfile: dgenerator/Dockerfile
+    networks:
+      - backend
+    volumes:
+      - /local/data/naetherm/datasets/wikipedia/wikipedia/en_US/:/input/
+      - /local/data/naetherm/datasets/benchmark/:/output/
+      - /local/data/naetherm/datasets/wikipedia/data/:/data/
   evaluator:
     build:
       context: ./
@@ -12,7 +22,7 @@ services:
     networks:
       - backend
     volumes:
-      - @@@DATA_PATH@@@:/data/
+      - /local/ssd2/benchmark/:/data/
   db:
     image: postgres
     restart: always
@@ -38,6 +48,6 @@ services:
       - db
       - evaluator
     volumes:
-      - @@@DATA_PATH@@@:/data/
+      - /local/ssd2/benchmark/:/data/
 networks:
   backend:

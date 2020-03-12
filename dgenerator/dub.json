@@ -1,0 +1,17 @@
+{
+	"authors": [
+		"Markus Naether"
+	],
+	"copyright": "Copyright © 2019, Markus Naether",
+	"description": "Noise generator.",
+	"license": "MIT",
+	"name": "dgenerator",
+	"targetType": "executable",
+	"dflags": [],
+
+	"dependencies": {
+		"darg": "~>0.1.0",
+		"snck": "~>0.0.4",
+		"dyaml": "0.8.0"
+	}
+}

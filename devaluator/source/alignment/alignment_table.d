@@ -125,11 +125,9 @@ class AlignmentToken {
 class AlignmentTable {
   /**
    * @brief
-   * default constructor.
+   * Default constructor.
    */
-  this() {
-
-  }
+  this() { }
 
   /**
    * @brief
@@ -365,8 +363,6 @@ class AlignmentTable {
 
       if (p_len > 2) {
         ulong[] p_ids = this.tokens[tidx].prediction_id;
-
-
       }
     }
   }
@@ -402,9 +398,7 @@ class AlignmentTable {
 
   bool isErrorFree() {
     for(ulong tidx = 0; tidx < this.tokens.length; tidx++) {
-      if (this.tokens[tidx].error_type != ErrorTypes.NONE) {
-        return false;
-      }
+      if (this.tokens[tidx].error_type != ErrorTypes.NONE) { return false; }
     }
 
     return true;
@@ -458,9 +452,7 @@ class AlignmentTable {
   bool equalTo(ulong aidx, ulong sidx, ref PredictionRepr prediction) {
     if (this.numTokens() == prediction.getNumTokens(aidx, sidx)) {
       for (ulong tidx = 0; tidx < this.numTokens(); tidx++) {
-        if (this[tidx].correct != prediction[aidx][sidx][tidx].token) {
-          return false;
-        }
+        if (this[tidx].correct != prediction[aidx][sidx][tidx].token) { return false; }
       }
       return true;
     }
@@ -476,15 +468,22 @@ class AlignmentTable {
   AlignmentToken[ulong] tokens;
 }
 
+/**
+ * @class
+ * AlignmentArticle
+ *
+ * @brief
+ * Alignment information for a whole article.
+ */
 class AlignmentArticle {
+  /** Constructor */
+  this() { }
 
-  this() {
-
-  }
-
+  /** Index operator */
   ref AlignmentTable opIndex(ulong nIdx) {
     return this.sentences[nIdx];
   }
 
+  /** Sentences of current article */
   AlignmentTable[ulong] sentences;
 }

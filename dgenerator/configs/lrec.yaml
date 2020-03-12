@@ -1,0 +1,15 @@
+---
+WordCapitalisationError: !!float 0.1
+RealWordConfusionError: !!float 0.1
+RealWordErrorConfusionError: !!float 0.1
+GaussianKeyboardError: !!float 0.1
+WordHyphenationError: !!float 0.1
+WordConcatenationError: !!float 0.1
+WordRemoveHyphenationError: !!float 0.1
+CommaPlacementError: !!float 0.1
+WordRepeatError: !!float 0.1
+CharRepeatError: !!float 0.1
+CharSwapError: !!float 0.1
+HyphenationSplitError: !!float 0.1
+TenseError: !!float 0.1
+PronounError: !!float 0.1

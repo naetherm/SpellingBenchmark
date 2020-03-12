@@ -4,9 +4,9 @@
     "pk": 1,
     "fields": {
       "benchmark_name": "Smallish",
-      "download_file": "/data/data/benchmarks/en_US/smallish_benchmark_source.json",
-      "groundtruth_file": "/data/data/benchmarks/en_US/smallish_benchmark_groundtruth.json",
-      "raw_file": "/data/data/benchmarks/en_US/smallish_benchmark_raw.txt",
+      "download_file": "/data/en_US/smallish_benchmark_source.json",
+      "groundtruth_file": "/data/en_US/smallish_benchmark_groundtruth.json",
+      "raw_file": "/data/en_US/smallish_benchmark_raw.txt",
       "lang_code": "en_US"
     }
   },
@@ -15,9 +15,9 @@
     "pk": 2,
     "fields": {
       "benchmark_name": "Tiny",
-      "download_file": "/data/data/benchmarks/en_US/tiny_benchmark_source.json",
-      "groundtruth_file": "/data/data/benchmarks/en_US/tiny_benchmark_groundtruth.json",
-      "raw_file": "/data/data/benchmarks/en_US/tiny_benchmark_raw.txt",
+      "download_file": "/data/en_US/tiny_benchmark_source.json",
+      "groundtruth_file": "/data/en_US/tiny_benchmark_groundtruth.json",
+      "raw_file": "/data/en_US/tiny_benchmark_raw.txt",
       "lang_code": "en_US"
     }
   },
@@ -26,9 +26,31 @@
     "pk": 3,
     "fields": {
       "benchmark_name": "Medium",
-      "download_file": "/data/data/benchmarks/en_US/medium_benchmark_source.json",
-      "groundtruth_file": "/data/data/benchmarks/en_US/medium_benchmark_groundtruth.json",
-      "raw_file": "/data/data/benchmarks/en_US/medium_benchmark_raw.txt",
+      "download_file": "/data/en_US/medium_benchmark_source.json",
+      "groundtruth_file": "/data/en_US/medium_benchmark_groundtruth.json",
+      "raw_file": "/data/en_US/medium_benchmark_raw.txt",
+      "lang_code": "en_US"
+    }
+  },
+  {
+    "model": "workbench.benchmark",
+    "pk": 4,
+    "fields": {
+      "benchmark_name": "Hertel",
+      "download_file": "/data/en_US/hertel_benchmark_source.json",
+      "groundtruth_file": "/data/en_US/hertel_benchmark_groundtruth.json",
+      "raw_file": "/data/en_US/hertel_benchmark_raw.txt",
+      "lang_code": "en_US"
+    }
+  },
+  {
+    "model": "workbench.benchmark",
+    "pk": 5,
+    "fields": {
+      "benchmark_name": "SmallFull",
+      "download_file": "/data/en_US/small_full_source.json",
+      "groundtruth_file": "/data/en_US/small_full_groundtruth.json",
+      "raw_file": "/data/en_US/small_full_raw.txt",
       "lang_code": "en_US"
     }
   },
@@ -123,8 +145,8 @@
     {
       "user": 1,
       "program_name": "GrammarBot",
-      "developer": "GrammarBot",
-      "url": "https://www.grammarbot.io/",
+      "developer": "Markus Näther",
+      "url": "http://ad-git.informatik.uni-freiburg.de",
       "is_baseline": true
     }
   }

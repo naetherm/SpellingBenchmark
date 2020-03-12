@@ -120,7 +120,7 @@ def benchmark(request, benchmark_id):
   programs = Program.objects.order_by('program_name')
   results = Result.objects.filter(benchmark=benchmark_id)
   sentences = receive_sentences_for_benchmark(benchmark_id)
-  
+
   # DEPRECATED: categories = ErrorCategory.objects.filter(benchmark=benchmark_id)
 
   js_program_names = json.dumps([p.program_name for p in programs])
@@ -384,16 +384,19 @@ def benchmark_populate_baseline(request, benchmark_id):
   raw_filepath = benchmark.raw_file
   lang_code = benchmark.lang_code
 
+  ski_programs = ["LanguageTool", "Aspell", "HunSpell", "MaShape", "GrammarBot"]
+
   for program in programs:
     #if program.program_name == "GrammarBot" or program.program_name == "LanguageTool":
     #  continue
-    if program.program_name == "LanguageTool":
+    if program.program_name in ski_programs:
       continue
 
     ##
     ##if program.program_name.lower() != 'xspell' and program.program_name.lower() != 'pyenchant':
     ##
 
+    print("\n"*20)
     print("Populate for program: %s" % (program.program_name))
     extraction_path = '/data/' + ''.join(random.choice(string.ascii_lowercase) for i in range(16)) + '/'
     os.mkdir(extraction_path)
@@ -410,7 +413,7 @@ def benchmark_populate_baseline(request, benchmark_id):
     # Cleanup
     #for idx, l in enumerate(links):
     #  links[idx] = l.replace('\n', '')
-    
+
     if os.path.exists(extraction_path + 'groundtruth.json'):
       source_content = ""
 
@@ -418,7 +421,7 @@ def benchmark_populate_baseline(request, benchmark_id):
         source_content = fin.read()
 
       prediction_content = predict_builtin(program.program_name, source_content, lang_code)
-      
+
       if not os.path.exists(os.path.dirname(extraction_path + 'prediction.json')):
         os.makedirs(os.path.dirname(extraction_path + 'prediction.json'))
       with open(extraction_path + 'prediction.json', 'w', encoding='utf-8') as fout:
@@ -431,18 +434,22 @@ def benchmark_populate_baseline(request, benchmark_id):
     response = requests.post('http://evaluator:1338/api/v1/evaluate', json=post_data)
 
     text_answer = response.text
-    print("text_answer: %s" % (text_answer))
-    #json_answer = response.json()
+    #print("text_answer: %s" % (text_answer))
+    json_answer = response.json()
     #print("json_answer: %s" % (json_answer))
     #try:
-    data = json.loads(response.text.replace("\\\"", "\"")[1:-1])
+    try:
+      data = json.loads(response.text.replace("\\\"", "\"")[1:-1])
 
-    #print("data: %s" % (data))
-    write_results_to_db(data, program, benchmark)
+      #print("data: %s" % (data))
+      write_results_to_db(data, program, benchmark)
 
-    # Write all information to the db
-    print("Start alignment parsing ...")
-    read_and_save_alignment_file(program, benchmark, extraction_path)
+      # Write all information to the db
+      print("Start alignment parsing ...")
+      read_and_save_alignment_file(program, benchmark, extraction_path)
+    except:
+      print("Ran into problems for Program {}".format(program.program_name))
+      print("\tCorresponding prediction can be found under: {}".format(extraction_path))
 
     # Remove the directory under /tmp
     #delete_directory(extraction_path)
@@ -549,7 +556,7 @@ def populate_baselines(request):
       shutil.copyfile(raw_filepath, extraction_path + 'raw.txt')
 
       print("Start prediction phase ...")
-      
+
       if os.path.exists(extraction_path + 'groundtruth.json'):
         #print("Evaluating '%s'" % (l))
         source_content = ""
@@ -558,7 +565,7 @@ def populate_baselines(request):
           source_content = fin.read()
 
         prediction_content = predict_builtin(program.program_name, source_content, lang_code)
-        
+
         if not os.path.exists(os.path.dirname(extraction_path + 'prediction.json')):
           os.makedirs(os.path.dirname(extraction_path + 'prediction.json'))
         with open(extraction_path + 'prediction.json', 'w', encoding='utf-8') as fout:
@@ -606,7 +613,7 @@ def get_predictions_for_benchmark_and_program(request, benchmark_id, program_id)
   prediction_wrapper[program.program_name] = []
   for prediction in p_predictions:
     prediction_wrapper[program.program_name].append({'tokens': prediction.tokens, 'corrected': prediction.corrected, 'src': prediction.src_connections, 'grt': prediction.tgt_connections})
-  
+
 
   return JsonResponse(prediction_wrapper, safe=True)
 

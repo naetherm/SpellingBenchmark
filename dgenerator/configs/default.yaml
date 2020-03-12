@@ -1,0 +1,21 @@
+---
+WordCapitalisationError: !!float 0.1
+WordConcatenationError: !!float 0.1
+RealWordConfusionError: !!float 0.1
+GaussianKeyboardError: !!float 0.5
+WordHyphenationError: !!float 0.1
+WordRemoveHyphenationError: !!float 0.1
+CharInsertError: !!float 0.1
+CharDeleteError: !!float 0.1
+NopError: !!float 0.6
+PronounError: !!float 0.1
+PunctuationError: !!float 0.1
+CommaPlacementError: !!float 0.1
+WordRepeatError: !!float 0.1
+CharRepeatError: !!float 0.1
+CharReplaceError: !!float 0.1
+HyphenationSplitError: !!float 0.1
+RandomSplitError: !!float 0.1
+MultiRandomSplitError: !!float 0.0
+CharSwapError: !!float 0.1
+TenseError: !!float 0.1

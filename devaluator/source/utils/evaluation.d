@@ -264,12 +264,14 @@ class EvaluationTable {
           this.penalizedScore += float(this.categories[error_type].corrected)/float(this.categories[error_type].total);
         }
       }
-      
+
       //this.numErrors += this.categories[error_type].total;
     }
 
-    this.penalizedScore /= float(scoreDivider-1);
-    this.penalizedScore *= (float(this.categories[ErrorTypes.NONE].corrected)/float(this.categories[ErrorTypes.NONE].total));
+    if (scoreDivider!=1) {
+      this.penalizedScore /= float(scoreDivider-1);
+      this.penalizedScore *= (float(this.categories[ErrorTypes.NONE].corrected)/float(this.categories[ErrorTypes.NONE].total));
+    }
     this.equalInfluenceScore /= float(scoreDivider);
 
     if (this.numTotalWords > 0) {
@@ -293,19 +295,25 @@ class EvaluationTable {
     // Calculate Average Accuracy
     foreach(i, error_type; EnumMembers!ErrorTypes) {
       if (error_type != ErrorTypes.NONE) {
-        this.detectionAverageAccuracy += (this.categories[error_type].detection_tp + this.categories[error_type].detection_tn) / (this.categories[error_type].detection_tp + this.categories[error_type].detection_tn + this.categories[error_type].detection_fp + this.categories[error_type].detection_tn);
-        this.correctionAverageAccuracy += (this.categories[error_type].correction_tp + this.categories[error_type].correction_tn) / (this.categories[error_type].correction_tp + this.categories[error_type].correction_tn + this.categories[error_type].correction_fp + this.categories[error_type].correction_tn);
+        if ((this.categories[error_type].detection_tp == 0) &&
+            (this.categories[error_type].detection_fp == 0) &&
+            (this.categories[error_type].detection_fn == 0)) {
+          // Rare but special case: TP, FP, and FN are all 0 -> The F1-Score should be 1 in this case
+        } else {
+          this.detectionAverageAccuracy += (this.categories[error_type].detection_tp + this.categories[error_type].detection_tn) / (this.categories[error_type].detection_tp + this.categories[error_type].detection_tn + this.categories[error_type].detection_fp + this.categories[error_type].detection_tn);
+          this.correctionAverageAccuracy += (this.categories[error_type].correction_tp + this.categories[error_type].correction_tn) / (this.categories[error_type].correction_tp + this.categories[error_type].correction_tn + this.categories[error_type].correction_fp + this.categories[error_type].correction_tn);
 
-        this.detectionErrorRate += (this.categories[error_type].detection_fp + this.categories[error_type].detection_fn) / (this.categories[error_type].detection_tp + this.categories[error_type].detection_tn + this.categories[error_type].detection_fp + this.categories[error_type].detection_tn);
-        this.correctionErrorRate += (this.categories[error_type].correction_fp + this.categories[error_type].correction_fn) / (this.categories[error_type].correction_tp + this.categories[error_type].correction_tn + this.categories[error_type].correction_fp + this.categories[error_type].correction_tn);
+          this.detectionErrorRate += (this.categories[error_type].detection_fp + this.categories[error_type].detection_fn) / (this.categories[error_type].detection_tp + this.categories[error_type].detection_tn + this.categories[error_type].detection_fp + this.categories[error_type].detection_tn);
+          this.correctionErrorRate += (this.categories[error_type].correction_fp + this.categories[error_type].correction_fn) / (this.categories[error_type].correction_tp + this.categories[error_type].correction_tn + this.categories[error_type].correction_fp + this.categories[error_type].correction_tn);
 
-        detNum += this.categories[error_type].detection_tp;
-        detDenomP += this.categories[error_type].detection_tp + this.categories[error_type].detection_fp;
-        detDenomR += this.categories[error_type].detection_tp + this.categories[error_type].detection_fn;
+          detNum += this.categories[error_type].detection_tp;
+          detDenomP += this.categories[error_type].detection_tp + this.categories[error_type].detection_fp;
+          detDenomR += this.categories[error_type].detection_tp + this.categories[error_type].detection_fn;
 
-        corrNum += this.categories[error_type].correction_tp;
-        corrDenomP += this.categories[error_type].correction_tp + this.categories[error_type].correction_fp;
-        corrDenomR += this.categories[error_type].correction_tp + this.categories[error_type].correction_fn;
+          corrNum += this.categories[error_type].correction_tp;
+          corrDenomP += this.categories[error_type].correction_tp + this.categories[error_type].correction_fp;
+          corrDenomR += this.categories[error_type].correction_tp + this.categories[error_type].correction_fn;
+        }
       }
     }
 
@@ -318,6 +326,19 @@ class EvaluationTable {
     this.detectionRecall = detNum / detDenomR;
     this.correctionPrecision = corrNum / detDenomP;
     this.correctionRecall = corrNum / corrDenomR;
+
+    if (isNaN(this.detectionPrecision)) {
+      this.detectionPrecision = 0.0;
+    }
+    if (isNaN(this.correctionPrecision)) {
+      this.correctionPrecision = 0.0;
+    }
+    if (isNaN(this.detectionRecall)) {
+      this.detectionRecall = 0.0;
+    }
+    if (isNaN(this.correctionRecall)) {
+      this.correctionRecall = 0.0;
+    }
 
     this.detectionFScore = 2 * (this.detectionPrecision * this.detectionRecall) / (this.detectionPrecision + this.detectionRecall);
     this.correctionFScore = 2 * (this.correctionPrecision * this.correctionRecall) / (this.correctionPrecision + this.correctionRecall);
@@ -332,6 +353,12 @@ class EvaluationTable {
     }
     if (isNaN(this.correctionFScore)) {
       this.correctionFScore = 0.0;
+    }
+    if (isNaN(this.equalInfluenceScore)) {
+      this.equalInfluenceScore = 0.0;
+    }
+    if (isNaN(this.penalizedScore)) {
+      this.penalizedScore = 0.0;
     }
   }
 

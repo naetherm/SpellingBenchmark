@@ -23,6 +23,7 @@ import devaluator.alignment.correlation_helper: CorrelationHelper;
 import devaluator.alignment.gap_table;
 import devaluator.utils.eval_helper: EvalHelper;
 import devaluator.utils.language: Language;
+import devaluator.utils.logger: ColoredLogger;
 import devaluator.utils.evaluation;
 import devaluator.utils.helper: JoinedGap, Table, RawRepr, PredictionRepr, GroundtruthRepr, SourceRepr;
 import devaluator.utils.nlp;
@@ -32,6 +33,15 @@ import devaluator.utils.types;
 /**
  * @class
  * AlignmentLinker
+ *
+ * @brief
+ * The AlignmentLinker does the following:
+ * 1)   Build the portion between two corresponding sentence pairs that are identical.
+ *      All other parts are usually tokens that were not corrected or simply wrong.
+ *      Those gaps are held in a separate group, the unaligned token pairs.
+ *      This is done for the pairs (groundtruth, prediction) and (source, prediction).
+ * 1.1) Build the first alignment-bridge ...
+ * 2) Those unaligned tokens are then
  */
 class AlignmentLinker {
 
@@ -80,6 +90,10 @@ class AlignmentLinker {
   void build() {
     // And build the alignment information
     this.mcCompiler.build();
+
+
+    //writeln("Before GapFitting: AlignmentTable:");
+    //writeln(this.mcCompiler.getAlignment(ARTidx, sidx));
 
     foreach (ARTidx; 0..this.mcCompiler.numArticles()) {
       // Now loop through all sentences
@@ -140,16 +154,17 @@ class AlignmentLinker {
         //}
         writeln("Processing article ", ARTidx, " sentence ", sidx);
         long nTolerance = 1;
+        int nIncrementCounter = 0;
         do {
           //writeln("\tWhile resolving");
-          writeln("\tP2G=>");
-          foreach(g; unresolvedP2G) {
-            writeln("\t", g);
-          }
-          writeln("\tP2S=>");
-          foreach(g; unresolvedP2S) {
-            writeln("\t", g);
-          }
+          //writeln("\tP2G=>");
+          //foreach(g; unresolvedP2G) {
+          //  writeln("\t", g);
+          //}
+          //writeln("\tP2S=>");
+          //foreach(g; unresolvedP2S) {
+          //  writeln("\t", g);
+          //}
           auto changedP2GGaps = this.postGapFitting(ARTidx, sidx, GroupAssociation.PRD2GRT, cAlignments, unresolvedP2G, nTolerance);
           auto changedP2SGaps = this.postGapFitting(ARTidx, sidx, GroupAssociation.PRD2SRC, cAlignments, unresolvedP2S, nTolerance);
 
@@ -194,7 +209,9 @@ class AlignmentLinker {
           //unresolvedP2S = changedP2SGaps[1];
 
           bAnyGapInformationChanged = changedP2GGaps[0] || changedP2SGaps[0];
-        } while (bAnyGapInformationChanged);
+
+          nIncrementCounter += 1;
+        } while (bAnyGapInformationChanged && (nIncrementCounter < 50));
 
         // Done, the rest is unresolvable
         unresolvableP2G = unresolvedP2G;
@@ -225,16 +242,17 @@ class AlignmentLinker {
 
   void evaluate() {
     // Loop through all sentences
-    foreach (ARTidx; 0..this.c().numArticles()) {
-      foreach (sidx; 0..this.c().numSentences(ARTidx)) {
-        auto cAlignments = this.mcCompiler.getAlignment(ARTidx, sidx);
+    foreach (aidx; 0..this.c().numArticles()) {
+      foreach (sidx; 0..this.c().numSentences(aidx)) {
+        auto cAlignments = this.mcCompiler.getAlignment(aidx, sidx);
 
         // 1) Loop through all entries of the
         this.mcETable.numSequence++;
 
-        if (cAlignments.isErrorFree()) {this.mcETable.numErrorFreeSentences += 1; }
+        if (cAlignments.isErrorFree()) { this.mcETable.numErrorFreeSentences += 1; }
         this.mcETable.numErrors += cAlignments.numErroneousTokens();
-        this.mcETable.numTotalWords += this.c().p().getNumTokens(ARTidx, sidx);
+        // The number of words are always the number of words of the proposed correction
+        this.mcETable.numTotalWords += this.c().p().getNumTokens(aidx, sidx);
 
         // Collection information about the amount of errors per category
         foreach (tidx; 0..cAlignments.numTokens()) {
@@ -258,8 +276,8 @@ class AlignmentLinker {
             auto pid = pids[0];
 
             // Did the tool tried to predict the error category?
-            if (!this.c().p(ARTidx, sidx, pid).type.empty) { // Yes
-              if (NameToType(to!string(this.c().p(ARTidx, sidx, pid).type)) == err) {
+            if (!this.c().p(aidx, sidx, pid).type.empty) { // Yes
+              if (NameToType(to!string(this.c().p(aidx, sidx, pid).type)) == err) {
                 // Correct prediction
                 this.mcETable[err].detection_tp += 1;
                 bEvaluatedErrorType = true;
@@ -272,12 +290,13 @@ class AlignmentLinker {
 
             // Okay, next: Was the token adequately predicted?
             if (cAlignments[tidx].checked is false) {
-              if (this.c().p(ARTidx, sidx, pid).token == sCorr) {
+              // Is the predicted token == the correct one?
+              if (this.c().p(aidx, sidx, pid).token == sCorr) {
                 this.mcETable[err].found += 1;
 
                 if (!bEvaluatedErrorType) {
                   this.mcETable[err].detection_tp += 1;
-                  this.mcETable.detectedErrors += 1;
+                  //this.mcETable.detectedErrors += 1;
                 }
                 this.mcETable[err].correction_tp += 1;
                 cAlignments[tidx].adequately_corrected = true;
@@ -299,9 +318,11 @@ class AlignmentLinker {
             }
             // Okay, not corrected. Is it then still the source token?
             if (cAlignments[tidx].checked is false) {
-              if (this.c().p(ARTidx, sidx, pid).token == sSrc) {
+              // Is the predicted token still the source one?
+              if (this.c().p(aidx, sidx, pid).token == sSrc) {
                 this.mcETable[err].detection_fn += 1;
                 this.mcETable[err].correction_fn += 1;
+                // If err != None => Tool thought the source token is correct.
                 if (err != ErrorTypes.NONE) {
                   this.mcETable[ErrorTypes.NONE].detection_fp += 1;
                   this.mcETable[ErrorTypes.NONE].correction_fp += 1;
@@ -315,15 +336,16 @@ class AlignmentLinker {
               }
             }
 
-            // Okay ... neither the source, nor the groundtruth. Let's investigate that further
+            // The predicted token is neither the source, nor the groundtruth. Let's investigate that further.
             if (cAlignments[tidx].checked is false) {
               // First of all: The tool thought of detecting an error
               this.mcETable.detectedErrors += 1;
               this.mcETable[err].detection_fn += 1;
               this.mcETable[err].correction_fn += 1;
 
-              auto sPredicted = this.c().p(ARTidx, sidx, pid).token;
+              auto sPredicted = this.c().p(aidx, sidx, pid).token;
 
+              // Did the tool just change the capitalisation?
               if (CorrelationHelper.isCapitalisationError(sSrc, sCorr, sPredicted)) {
                 if (cAlignments[tidx].checked is false) {
                   this.mcETable[ErrorTypes.CAPITALISATION].detection_fp += 1;
@@ -445,7 +467,9 @@ class AlignmentLinker {
               cAlignments[tidx].checked = true;
             }
           }
+
           // Now the special cases: The groundtruth is connected to either multiple source or prediction tokens!
+          // First: The number of connected prediction tokens doesn't matter, but there is just one source token.
           if (sids.length == 1) { // -> Connected to multiple prediction elements
             if (cAlignments[tidx].checked is false) {
               if ((err == ErrorTypes.REPEAT) || (err == ErrorTypes.SPLIT)) { // If this is a split or repeat the number of sids is always 2 ...
@@ -455,6 +479,21 @@ class AlignmentLinker {
                 this.mcETable[ErrorTypes.NONE].correction_fp += 1;
                 this.mcETable.incrementFoundExcept([ErrorTypes.NONE]);
 
+                cAlignments[tidx].checked = true;
+              } else if ((pids.length == 0) && (err == ErrorTypes.PUNCTUATION)) {
+                // Special case: the source has a punctuation that is not present within the groundtruth
+                // The tools seems to have detected that error and fixed the punctuation!
+                this.mcETable[err].detection_tp += 1;
+                this.mcETable[err].correction_tp += 1;
+
+                cAlignments[tidx].adequately_corrected = true;
+
+                // Increase true negative counters for all other categories
+                this.mcETable.increaseTNCountsExcept([err]);
+                this.mcETable.incrementCorrected(err);
+                this.mcETable.numCorrectWords += 1;
+
+                // Groundtruth token was checked
                 cAlignments[tidx].checked = true;
               } else if ((pids.length == 2) && (err == ErrorTypes.CONCATENATION)) {
 
@@ -472,7 +511,7 @@ class AlignmentLinker {
                   // Check if sids and pids are still the safe -> we did not change anything and by that don't detect that REPEAT/SPLIT
                   bool bSame = true;
                   foreach (sid; 0..sids.length) {
-                    if (this.c().s(ARTidx, sidx, sids[sid]).token != this.c().p(ARTidx, sidx, pids[sid]).token) {
+                    if (this.c().s(aidx, sidx, sids[sid]).token != this.c().p(aidx, sidx, pids[sid]).token) {
                       bSame = false;
                       break;
                     }
@@ -495,7 +534,7 @@ class AlignmentLinker {
                   if (pids.length == 1) {
                     // SPLIT or REPEAT: either just made one word out of it
 
-                    if (cAlignments[tidx].correct == this.c().p(ARTidx, sidx, pids[0]).token) {
+                    if (cAlignments[tidx].correct == this.c().p(aidx, sidx, pids[0]).token) {
                       // Corrected it \o/
                       this.mcETable[err].detection_tp += 1;
                       this.mcETable[err].correction_tp += 1;
@@ -511,7 +550,7 @@ class AlignmentLinker {
                       cAlignments[tidx].checked = true;
                     } else {
                       if (err == ErrorTypes.SPLIT) {
-                        writeln("Ehm ... halp?");
+                        /// TODO(naetherm): writeln("Ehm ... halp?");
                       } else {
                         // ???
                       }
@@ -544,7 +583,7 @@ class AlignmentLinker {
 
               }
 
-              if (this.c().p(ARTidx, sidx, pid).token == sCorr) {
+              if (this.c().p(aidx, sidx, pid).token == sCorr) {
                 this.mcETable[err].detection_tp += 1;
                 this.mcETable[err].correction_tp += 1;
                 this.mcETable.increaseTNCountsExcept([err]);
@@ -561,7 +600,7 @@ class AlignmentLinker {
               } else {
 
                 if (cAlignments[tidx].checked is false)  {
-                  if (this.c().p(ARTidx, sidx, pid).token == sSrc) {
+                  if (this.c().p(aidx, sidx, pid).token == sSrc) {
                     this.mcETable[err].detection_fn += 1;
                     this.mcETable[err].correction_fn += 1;
 
@@ -613,7 +652,7 @@ class AlignmentLinker {
           }
         }
 
-        if (cAlignments.equalTo(ARTidx, sidx, this.c().p())) {
+        if (cAlignments.equalTo(aidx, sidx, this.c().p())) {
           this.mcETable.numCorrectSequence += 1;
         }
       }
@@ -626,10 +665,10 @@ class AlignmentLinker {
     // proposed output? I mean, the only type of gaps we are left with here are NUMTOKENS >= 1 to NONE.
     // The other case would be that there are tokens left wihtin  either the groundtruth or source
     // that are not represented within the prediction -> the tool "forget" those words.
-    foreach (ARTidx; 0..this.c().numArticles()) {
-      foreach (sidx; 0..this.c().numSentences(ARTidx)) {
-        auto cAlignments = this.mcCompiler.getAlignment(ARTidx, sidx);
-        auto cGaps = this.mcCompiler.getGap(ARTidx, sidx);
+    foreach (aidx; 0..this.c().numArticles()) {
+      foreach (sidx; 0..this.c().numSentences(aidx)) {
+        auto cAlignments = this.mcCompiler.getAlignment(aidx, sidx);
+        auto cGaps = this.mcCompiler.getGap(aidx, sidx);
 
         // First the remaining
         foreach(gidx; 0..cGaps.lengthP2G()) {
@@ -655,19 +694,21 @@ class AlignmentLinker {
           } else if (g.other().empty()) {
             // Prediction element has no groundtruth element -> Gerti reveals she sabotaged it and ...
             if (g.other().left()-1 >= 0) {
-              if (endsWith(cAlignments[g.other().left()-1].correct.byDchar, this.c().p(ARTidx, sidx, g.pred().left()).token)) {
+              if (endsWith(cAlignments[g.other().left()-1].correct.byDchar, this.c().p(aidx, sidx, g.pred().left()).token)) {
                 cAlignments[g.other().left()-1].prediction_id ~= g.pred().left();
                 if (cAlignments[g.other().left()-1].checked is false) {
-                  // TODO: EVAL?
+                  // TODO: EVAL
+                  /// TODO(naetherm): Evaluate?
                   cAlignments[g.other().left()-1].checked = true;
                 }
               }
             }
             if (g.other.right() < cAlignments.numTokens()) {
-              if (endsWith(cAlignments[g.other().right()].correct.byDchar, this.c().p(ARTidx, sidx, g.pred().left()).token)) {
+              if (endsWith(cAlignments[g.other().right()].correct.byDchar, this.c().p(aidx, sidx, g.pred().left()).token)) {
                 cAlignments[g.other().right()].prediction_id ~= g.pred().left();
                 if (cAlignments[g.other().right()].checked is false) {
-                  // TODO: EVAL?
+                  // TODO: EVAL
+                  /// TODO(naetherm): Evaluate?
                   cAlignments[g.other().right()].checked = true;
                 }
               }
@@ -703,10 +744,11 @@ class AlignmentLinker {
               long[] gids = cAlignments.getGrouthtruthIDsOfTokenWithSourceID(g.other().left()-1);
               foreach (srcidx; 0..gids.length) {
                 auto gid = gids[srcidx];
-                if (endsWith(cAlignments[gid].token.byDchar, this.c().p(ARTidx, sidx, g.pred().left()).token)) {
+                if (endsWith(cAlignments[gid].token.byDchar, this.c().p(aidx, sidx, g.pred().left()).token)) {
                   cAlignments[gid].prediction_id ~= g.pred().left();
                   if (cAlignments[gid].checked is false) {
-                    // TODO: EVAL?
+                    // TODO: EVAL
+                    /// TODO(naetherm): Evaluate?
                     cAlignments[gid].checked = true;
                   }
                 }
@@ -716,10 +758,11 @@ class AlignmentLinker {
               long[] gids = cAlignments.getGrouthtruthIDsOfTokenWithSourceID(g.other().right());
               foreach (srcidx; 0..gids.length) {
                 auto gid = gids[srcidx];
-                if (endsWith(cAlignments[gid].token.byDchar, this.c().p(ARTidx, sidx, g.pred().left()).token)) {
+                if (endsWith(cAlignments[gid].token.byDchar, this.c().p(aidx, sidx, g.pred().left()).token)) {
                   cAlignments[gid].prediction_id ~= g.pred().left();
                   if (cAlignments[gid].checked is false) {
-                    // TODO: EVAL?
+                    // TODO: EVAL
+                    /// TODO(naetherm): Evaluate?
                     cAlignments[gid].checked = true;
                   }
                 }
@@ -734,10 +777,10 @@ class AlignmentLinker {
     //
     // Finalisation. Did we forget any alignment index?
     //
-    foreach (ARTidx; 0..this.c().numArticles()) {
-      foreach (sidx; 0..this.c().numSentences(ARTidx)) {
+    foreach (aidx; 0..this.c().numArticles()) {
+      foreach (sidx; 0..this.c().numSentences(aidx)) {
         bool bFoundUncheckedToken = false;
-        auto cAlignments = this.mcCompiler.getAlignment(ARTidx, sidx);
+        auto cAlignments = this.mcCompiler.getAlignment(aidx, sidx);
         foreach (tidx; 0..cAlignments.tokens.length) {
           if (cAlignments[tidx].checked is false) {
             bFoundUncheckedToken = true;
@@ -754,10 +797,10 @@ class AlignmentLinker {
     //
     // Calculate the suggestion adequacy
     //
-    foreach (ARTidx; 0..this.c().numArticles()) {
-      foreach (sidx; 0..this.c().numSentences(ARTidx)) {
-        auto cAlignments = this.mcCompiler.getAlignment(ARTidx, sidx);
-        auto cGaps = this.mcCompiler.getGap(ARTidx, sidx);
+    foreach (aidx; 0..this.c().numArticles()) {
+      foreach (sidx; 0..this.c().numSentences(aidx)) {
+        auto cAlignments = this.mcCompiler.getAlignment(aidx, sidx);
+        auto cGaps = this.mcCompiler.getGap(aidx, sidx);
 
         foreach (tidx; 0..cAlignments.tokens.length) {
           auto gid = cAlignments[tidx].id;
@@ -765,17 +808,23 @@ class AlignmentLinker {
           auto pids = cAlignments[tidx].prediction_id;
 
           foreach (pid; 0..pids.length) {
-            auto suggestions = this.c().p(ARTidx, sidx, pids[pid]).suggestions;
+            auto suggestions = this.c().p(aidx, sidx, pids[pid]).suggestions;
 
-            if (!suggestions.empty) {
-              this.mcETable.numSuggestions += 1;
+            // Increase the number of suggestions
+            this.mcETable.numSuggestions += 1;
 
-              if (this.c().p(ARTidx, sidx, pids[pid]).token == sCorr) {
-                this.mcETable.suggestionAdequacy += 1.0;
-              } else if (suggestions.canFind(sCorr)) {
-                this.mcETable.suggestionAdequacy += 0.5;
+            if (this.c().p(aidx, sidx, pids[pid]).token == sCorr) {
+              this.mcETable.suggestionAdequacy += 1.0;
+            } else {
+              if (!suggestions.empty) {
+
+                if (suggestions.canFind(sCorr)) {
+                  this.mcETable.suggestionAdequacy += 0.5;
+                } else {
+                  this.mcETable.suggestionAdequacy -= 0.5;
+                }
               } else {
-                this.mcETable.suggestionAdequacy -= 0.5;
+                // Do nothing, due to algorithm += 0.0 but we could simply skip that
               }
             }
           }
@@ -794,15 +843,15 @@ class AlignmentLinker {
     //
     // We are filling the alignments.json through an inverse search
     //
-    foreach (ARTidx; 0..this.c().numArticles()) {
-      foreach (sidx; 0..this.c().numSentences(ARTidx)) {
+    foreach (aidx; 0..this.c().numArticles()) {
+      foreach (sidx; 0..this.c().numSentences(aidx)) {
 
-        auto cAlignments = this.c().getAlignment(ARTidx, sidx);
+        auto cAlignments = this.c().getAlignment(aidx, sidx);
 
-        auto predictionTokens = this.c().p(ARTidx, sidx); // Get the predicted tokens
+        auto predictionTokens = this.c().p(aidx, sidx); // Get the predicted tokens
 
 
-        foreach (pidx; 0..this.c().p().getNumTokens(ARTidx, sidx)) {
+        foreach (pidx; 0..this.c().p().getNumTokens(aidx, sidx)) {
           string concatenated_tokens = "";
           string concatenated_sids;
           string concatenated_gids;
@@ -823,11 +872,11 @@ class AlignmentLinker {
           tokensArray ~= temp_;
 
           bool check_helper = true;
-          for (size_t aidx = 0; aidx < cAlignments.numTokens(); aidx++) {
-            if (cAlignments[aidx].prediction_id.canFind(pidx)) {
-              gidsArray ~= cAlignments[aidx].id;
-              sidsArray ~= cAlignments[aidx].source_id;
-              check_helper = check_helper && cAlignments[aidx].adequately_corrected;
+          for (size_t tidx = 0; tidx < cAlignments.numTokens(); tidx++) {
+            if (cAlignments[tidx].prediction_id.canFind(pidx)) {
+              gidsArray ~= cAlignments[tidx].id;
+              sidsArray ~= cAlignments[tidx].source_id;
+              check_helper = check_helper && cAlignments[tidx].adequately_corrected;
             }
           }
           // Concatenate everything and write to file
@@ -848,7 +897,7 @@ class AlignmentLinker {
             concatenated_gids = "[]";
           }
           string temp = format("  {\"id\": \"a%d.s%d.w%d\", \"token\": \"%s\", \"corrected\": %s, \"gids\": %s, \"sids\": %s },\n",
-            ARTidx,
+            aidx,
             sidx,
             pidx,
             concatenated_tokens,
@@ -856,9 +905,9 @@ class AlignmentLinker {
             concatenated_gids,
             concatenated_sids
           );
-          if ((ARTidx == (this.c().numArticles() - 1)) &&
-              (sidx == (this.c().numSentences(ARTidx) - 1)) &&
-              (pidx == (this.c().p().getNumTokens(ARTidx, sidx) - 1))) {
+          if ((aidx == (this.c().numArticles() - 1)) &&
+              (sidx == (this.c().numSentences(aidx) - 1)) &&
+              (pidx == (this.c().p().getNumTokens(aidx, sidx) - 1))) {
             temp = temp[0..$-2];
           }
           std.file.append(resultFilename, temp);
@@ -1017,8 +1066,8 @@ class AlignmentLinker {
                     //(levenshteinDistance(cAlignment[gLeft-1].correct.byDchar, this.c().p(aidx, sidx, pLeft).token.byDchar) <= nDiff))) {
                   // Got it, assign to the repeat
                   cAlignment[gLeft-1].prediction_id ~= pLeft;
-                  //alignedP2GItems ~= pLeft;  // NEW
-                  //alignedP2GItems ~= gLeft-1; // NEW
+                  alignedP2GItems ~= pLeft;  // NEW
+                  alignedP2GItems ~= gLeft-1; // NEW
                   changedGapInformation = true;
                   break;
                 }
@@ -1030,13 +1079,13 @@ class AlignmentLinker {
                     endsWith(cAlignment[gLeft-1].token.byDchar, this.c().p(aidx, sidx, pLeft).token.byDchar) ||
                     (EvalHelper.sim(cAlignment[gLeft-1].token.byDchar, this.c().p(aidx, sidx, pLeft).token.byDchar, true) > 0.7)) {
                   cAlignment[gLeft-1].prediction_id ~= pLeft;
-                  //alignedP2GItems ~= pLeft;  // NEW
-                  //alignedP2GItems ~= gLeft-1; // NEW
+                  alignedP2GItems ~= pLeft;  // NEW
+                  alignedP2GItems ~= gLeft-1; // NEW
                   changedGapInformation = true;
                   break;
                 }
               } else {
-                writeln("In here");
+                writeln("GapFitting -> In here");
               }
 
               /*
@@ -1148,9 +1197,14 @@ class AlignmentLinker {
             foreach (gid; 0..g.other().length()) {
               if (abs(gid-pid) <= nDiff) { // Only when we are within the correct range
                 // Do the checking
-                // TODO(naetherm): Dynamic difference for levenshtein based on word length?
+                // TODO(naetherm): Dynamic difference for levenshtein based on word length
+                //writeln("numTokens: ", cAlignment.numTokens(), " :: Try accessing ", gLeft+gid);
                 long nLevenshteinDiff = to!long(ceil(to!float(cAlignment[gLeft+gid].correct.length) / 2));  // NEW floor -> ceil
                 auto minLength = min(cAlignment[gLeft+gid].correct.length, this.c().p(aidx, sidx, pLeft+pid).token.length);
+                //writeln("\tLevenshtein-Distance: ", nLevenshteinDiff);
+                //writeln("\tComparing[mL=",minLength,"]: g=", cAlignment[gLeft+gid].correct, " p=", this.c().p(aidx, sidx, pLeft+pid).token);
+                //writeln("\tDistance: ", levenshteinDistance(this.c().p(aidx, sidx, pLeft+pid).token.byDchar, cAlignment[gLeft+gid].correct.byDchar));
+                //writeln("\tSim: ", EvalHelper.sim(this.c().p(aidx, sidx, pLeft+pid).token.byDchar, cAlignment[gLeft+gid].correct.byDchar));
                 if ((pLeft+pid < this.c().p(aidx, sidx).getNumTokens()) && (gLeft+gid < cAlignment.numTokens())) {
                   if ((0 == icmp(this.c().p(aidx, sidx, pLeft+pid).token.byDchar, cAlignment[gLeft+gid].correct.byDchar)) ||
                       (EvalHelper.sim(this.c().p(aidx, sidx, pLeft+pid).token.byDchar, cAlignment[gLeft+gid].correct.byDchar) > 0.7) ||
@@ -1274,11 +1328,14 @@ class AlignmentLinker {
             foreach (sid; 0..g.other().length()) {
               if (abs(sid-pid) <= nDiff) { // Only when we are within the correct range
                 // Do the checking
+                // Calculate the max. levelshtein diff. for these two tokens
                 long nLevenshteinDiff = to!long(ceil(to!float(this.c().s(aidx, sidx, sLeft+sid).token.length) / 2));
                 auto minLength = min(this.c().s(aidx, sidx, sLeft+sid).token.length, this.c().p(aidx, sidx, pLeft+pid).token.length);
                 if ((0 == icmp(this.c().p(aidx, sidx, pLeft+pid).token.byDchar, this.c().s(aidx, sidx, sLeft+sid).token.byDchar)) ||
                     (EvalHelper.sim(this.c().p(aidx, sidx, pLeft+pid).token.byDchar, this.c().s(aidx, sidx, sLeft+sid).token.byDchar) > 0.7) ||
                     (EvalHelper.sim(toLower(this.c().p(aidx, sidx, pLeft+pid).token.byDchar), toLower(this.c().s(aidx, sidx, sLeft+sid).token.byDchar)) > 0.7) ||
+                    //(jaroSimilarity(this.c().p(aidx, sidx, pLeft+pid).token.byDchar, this.c().s(aidx, sidx, sLeft+sid).token.byDchar) >= 0.75) ||
+                    //(levenshteinDistance(this.c().p(aidx, sidx, pLeft+pid).token.byDchar, this.c().s(aidx, sidx, sLeft+sid).token.byDchar) <= nLevenshteinDiff) ||
                     (startsWith(this.c().s(aidx, sidx, sLeft+sid).token.byDchar, this.c().p(aidx, sidx, pLeft+pid).token[0..$-nStartNEndDiff].byDchar)) ||
                     (EvalHelper.sim(this.c().s(aidx, sidx, sLeft+sid).token.byDchar, this.c().p(aidx, sidx, pLeft+pid).token[0..$-nStartNEndDiff].byDchar) > 0.7) ||
                     (EvalHelper.sim(toLower(this.c().s(aidx, sidx, sLeft+sid).token[0..minLength].byDchar), toLower(this.c().p(aidx, sidx, pLeft+pid).token[0..minLength].byDchar)) > 0.7) ||
@@ -1338,6 +1395,11 @@ class AlignmentLinker {
    * The evaluation table for the final results.
    */
   EvaluationTable mcETable;
+
+  /**
+   * Use for visualization.
+   */
+  ColoredLogger mcLogger;
 
 }
 

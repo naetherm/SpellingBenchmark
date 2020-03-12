@@ -13,5 +13,4 @@
 # Build the generator and create the dataset
 #
 cd /code/
-#./dgenerator --dataset=wikipedia --seed=1337 --format=json --lang_code=en_US --mode=$1 --input_dir=/input/ --output_dir=/output/ --data_dir=../data/
 ./devaluator

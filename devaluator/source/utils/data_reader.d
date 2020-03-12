@@ -15,6 +15,13 @@ import std.typecons: tuple, Tuple;
 
 alias Result = Tuple!(SourceRepr, GroundtruthRepr, PredictionRepr);
 
+/**
+ * @interface
+ * DataReaderInterface
+ *
+ * @brief
+ * Data reader interface.
+ */
 interface DataReaderInterface {
 
   SourceRepr parseSource(dstring input);
@@ -24,15 +31,15 @@ interface DataReaderInterface {
   GroundtruthRepr parseGroundtruth(dstring input);
 }
 
-/** 
+/**
  * @class
  * DataReaderWrapper
- * 
+ *
  * Wrapper for all specific dataset readers.
  */
 class DataReaderWrapper : DataReaderInterface {
 
-  /** 
+  /**
    * Sets the internal information about the number of articles and sentences per article.
    * This information is read from groundtruth["information"] -> "numArticles" and "sentences".
    * Params:
@@ -48,7 +55,7 @@ class DataReaderWrapper : DataReaderInterface {
     this.sentencesPerArticle.destroy();
 
     auto temp = parsed["information"]["sentences"].arrayNoRef;
-        
+
     foreach (s; temp) {
       this.sentencesPerArticle ~= to!ulong(s.integer);
     }

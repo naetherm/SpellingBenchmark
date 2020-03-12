@@ -14,9 +14,12 @@ import devaluator.alignment.gap_table;
 import devaluator.utils.helper;
 import devaluator.utils.types;
 
-
-// NOTE: Does that for all sentences
-
+/**
+ * @class
+ * AlignmentCompiler
+ *
+ * @brief
+ */
 class AlignmentCompiler {
 
   /**
@@ -138,7 +141,7 @@ class AlignmentCompiler {
   /**
    * @brief
    * This method is responsible for building the alignments between all three representations:
-   * groundtruth, prediction, and source. 
+   * groundtruth, prediction, and source.
    *
    * In subsequent steps we build the alignment tables between all of these representations
    * and merge the gaps to gap-groups
@@ -146,7 +149,7 @@ class AlignmentCompiler {
   private void alignment(ulong aidx, ulong nNumSentences) {
     // Loop through all sentences
     foreach (sidx; 0..nNumSentences) {
-      // Fetch all tokens of the current sentence. We are doing some cheating right here, which 
+      // Fetch all tokens of the current sentence. We are doing some cheating right here, which
       // makes the alignment building a bit more "efficient" by making usage of case insensitivity
       dstring[] s_tokens = this.mcSource.getTokens(aidx, sidx);
       dstring[] p_tokens = this.mcPrediction.getTokens(aidx, sidx);
@@ -157,7 +160,7 @@ class AlignmentCompiler {
       // Build alignment between prediction and groundtruth
       auto cP2G_ZCA = new ZeroCutAlignment!(dstring)(p_tokens, g_tokens);
       Result cP2GRes = cP2G_ZCA.build();
-      
+
       writeln("cP2GRes[0]: ");
       foreach(i; 0..cP2GRes[0].length) {
         writeln(cP2GRes[0][i]);
@@ -166,11 +169,11 @@ class AlignmentCompiler {
       foreach(i; 0..cP2GRes[1].length) {
         writeln(cP2GRes[1][i]);
       }
-      
+
       // Build alignment between prediction and source
       auto cP2S_ZCA = new ZeroCutAlignment!(dstring)(p_tokens, s_tokens);
       Result cP2SRes = cP2S_ZCA.build();
-      
+
       writeln("cP2SRes[0]: ");
       foreach(i; 0..cP2SRes[0].length) {
         writeln(cP2SRes[0][i]);
@@ -188,12 +191,12 @@ class AlignmentCompiler {
     }
   }
 
-  /** 
+  /**
    * @brief
    * This last step tries to stuff some remaining gaps before we go to the linking process.
    * What we are doing in here:
    * Loop through all P2S gaps:
-   *   For each sid in the gap find the correlating groundtruth token and check whether 
+   *   For each sid in the gap find the correlating groundtruth token and check whether
    *     it is within the list of pids of that gap if it has any connection to P.
    *   If true make that connection betwen P and S and
    */
@@ -283,7 +286,7 @@ class AlignmentCompiler {
    * @brief
    * This method will merge the fetch information for the sentence @p nSentence.
    * Keep in midn that the additional parameters will hold the data within the following format:
-   * -  cP2G: The first element of each group are the IDs of the prediction, the second for the 
+   * -  cP2G: The first element of each group are the IDs of the prediction, the second for the
    *    groundtruth.
    * -  cP2S: The first element of each group are the IDs of the prediction, the second for the
    *    source.
@@ -303,7 +306,7 @@ class AlignmentCompiler {
     // Second, loop through all entries of P2S[0] (The real alignment information)
     // We can just the fact that both, the prediction and the source must have the same length here
     // otherwise an n-gram alignment wouldn't have been possible!
-    // In contrast to the previous assignment we cannot directly assign the labels, we have to loop 
+    // In contrast to the previous assignment we cannot directly assign the labels, we have to loop
     // through the whole table to find the groundtruth-entry which owns the correct source id
     foreach (gidx; 0..cP2S[0].length) {
       foreach(sidx; 0..cP2S[0][gidx].length()) {
@@ -324,12 +327,12 @@ class AlignmentCompiler {
         new GapToken(
           GroupAssociation.PRD2GRT,
           new GapItem(
-            cP2G[1][gidx].mcFirst.mnLeft, 
-            cP2G[1][gidx].mcFirst.mnRight, 
+            cP2G[1][gidx].mcFirst.mnLeft,
+            cP2G[1][gidx].mcFirst.mnRight,
             cP2G[1][gidx].mcFirst.mnLeft == cP2G[1][gidx].mcFirst.mnRight), // Prediction
           new GapItem(
-            cP2G[1][gidx].mcSecond.mnLeft, 
-            cP2G[1][gidx].mcSecond.mnRight, 
+            cP2G[1][gidx].mcSecond.mnLeft,
+            cP2G[1][gidx].mcSecond.mnRight,
             cP2G[1][gidx].mcSecond.mnLeft == cP2G[1][gidx].mcSecond.mnRight) // Groundtruth
         )
       );
@@ -340,12 +343,12 @@ class AlignmentCompiler {
         new GapToken(
           GroupAssociation.PRD2SRC,
           new GapItem(
-            cP2S[1][gidx].mcFirst.mnLeft, 
-            cP2S[1][gidx].mcFirst.mnRight, 
+            cP2S[1][gidx].mcFirst.mnLeft,
+            cP2S[1][gidx].mcFirst.mnRight,
             cP2S[1][gidx].mcFirst.mnLeft == cP2S[1][gidx].mcFirst.mnRight), // Prediction
           new GapItem(
-            cP2S[1][gidx].mcSecond.mnLeft, 
-            cP2S[1][gidx].mcSecond.mnRight, 
+            cP2S[1][gidx].mcSecond.mnLeft,
+            cP2S[1][gidx].mcSecond.mnRight,
             cP2S[1][gidx].mcSecond.mnLeft == cP2S[1][gidx].mcSecond.mnRight) // Source
         )
       );
@@ -384,7 +387,7 @@ unittest {
 
   import devaluator.utils.helper: RawRepr, PredictionRepr, GroundtruthRepr, SourceRepr;
   import devaluator.utils.data_reader: DataReader, JSONDataReader;
-  import devaluator.utils.language: Language; 
+  import devaluator.utils.language: Language;
 
   dstring raw_demo = "This is the first, obviously simple, sentence.\nAnd another test sentence.";
   dstring source_demo = "{
@@ -425,7 +428,7 @@ unittest {
       {\"affected-id\": \"a0.s1.w2-a0.s1.w3\", \"correct\": \"test\", \"type\": \"REPEAT\" },
       {\"affected-id\": \"a0.s1.w4\", \"correct\": \"sentence\", \"type\": \"NONE\" },
       {\"affected-id\": \"a0.s1.w5\", \"correct\": \".\", \"type\": \"NONE\" }
-    ], 
+    ],
     \"information\": {
       \"numArticles\": 1,
       \"sentences\": [2]
@@ -468,9 +471,7 @@ unittest {
 
   import devaluator.utils.helper: RawRepr, PredictionRepr, GroundtruthRepr, SourceRepr;
   import devaluator.utils.data_reader: DataReader, JSONDataReader;
-  import devaluator.utils.language: Language; 
-
-  writeln("SOON AFTERWARDS ...");
+  import devaluator.utils.language: Language;
 
   dstring raw_demo = "This is the first, obviously simple, sentence.\nAnd another test sentence.";
   dstring source_demo = "{
@@ -505,7 +506,7 @@ unittest {
       {\"affected-id\": \"a0.s0.w9-a0.s0.w10\", \"correct\": \"Johnny\", \"type\": \"SPLIT\" },
       {\"affected-id\": \"a0.s0.w11\", \"correct\": \"Curtis\", \"type\": \"NONE\" },
       {\"affected-id\": \"a0.s0.w12\", \"correct\": \".\", \"type\": \"NONE\" }
-    ], 
+    ],
     \"information\": {
       \"numArticles\": 1,
       \"sentences\": [2]

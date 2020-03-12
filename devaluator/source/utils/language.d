@@ -102,12 +102,13 @@ class NeighborRepresentation {
    * @brief
    * Constructor.
    */
-  this(dstring key, ulong id, string eType, ulong[] reals, ulong[] archaics) {
+  this(dstring key, ulong id, string eType, ulong[] reals, ulong[] archaics, ulong[] errors) {
     this.key = key;
     this.id = id;
     this.eType = eType;
     this.reals = reals;
     this.archaics = archaics;
+    this.errors = errors;
   }
 
   /**
@@ -130,6 +131,10 @@ class NeighborRepresentation {
    * List containing the unique IDs of all archaics.
    */
   ulong[] archaics;
+  /**
+   * List containing the unique IDs of all popular errors, according to Norvig etc.
+   */
+  ulong[] errors;
 }
 
 /**
@@ -176,15 +181,15 @@ class Language {
 
   /**
    * @brief
-   * 
+   *
    */
   private void readLanguageDictionary() {
     string[] langDict = null;
-    
+
     langDict = readText(buildPath(this.dataDir, "langs", format("%s.bin", this.langCode))).split("\n");
-    
+
     ulong nCounter = 0;
-    
+
     foreach (string line; langDict) {
       // TODO(naetherm): Read new linewise encoding:
       // NOTE: The line number represents the unique ID (starting with ID=0)
@@ -195,7 +200,17 @@ class Language {
         auto s_type = splitted[1];
         auto s_reals = to!(ulong[])(split(splitted[2]));
         auto s_archaics = to!(ulong[])(split(splitted[3]));
-        NeighborRepresentation nRep = new NeighborRepresentation(s_word, nCounter, s_type, s_reals, s_archaics);
+        ulong[] s_errors;
+        if (splitted.length > 4) {
+          s_errors = to!(ulong[])(split(splitted[4]));
+        }
+        NeighborRepresentation nRep = new NeighborRepresentation(
+          s_word,
+          nCounter,
+          s_type,
+          s_reals,
+          s_archaics,
+          s_errors);
 
         this.mId2N[nCounter] = nRep;
         this.mKey2N[s_word] = nRep;
@@ -236,7 +251,7 @@ class Language {
         writeln(format("The fetched line does not consist of exactly two parts. Found %d number of parts in line %d.", splitted.length, nCounter));
       }
       ++nCounter;
-    } 
+    }
   }
 
   ref PronounTable getPronounTableByKey(dstring sKey) {

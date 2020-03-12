@@ -181,18 +181,21 @@ class AlignmentArticle(object):
 
 def build_alignment_sentence_representation(input):
   json_ = input
-  num_articles = set()
+  num_articles = 0
   for t in json_["alignments"]:
     nums_ = re.findall('\d+', t['id'], re.UNICODE)
-    num_articles.add(int(nums_[0]))
+    #articles.add(int(nums_[0]))
+    if num_articles < int(nums_[0]):
+      num_articles = int(nums_[0])
+  num_articles = num_articles + 1
   # count sentences
-  num_sentences = [set() for _ in range(len(num_articles))]
+  num_sentences = [set() for _ in range(num_articles)]
   for t in json_["alignments"]:
     nums_ = re.findall('\d+', t['id'], re.UNICODE)
     num_sentences[int(nums_[0])].add(int(nums_[1]))
   
-  results = [AlignmentArticle() for _ in range(len(num_articles))]
-  for e in range(len(num_articles)):
+  results = [AlignmentArticle() for _ in range(num_articles)]
+  for e in range(num_articles):
     results[e].tokens = [[] for _ in range(len(num_sentences[e]))]
     results[e].src_connections = [[] for _ in range(len(num_sentences[e]))]
     results[e].grt_connections = [[] for _ in range(len(num_sentences[e]))]

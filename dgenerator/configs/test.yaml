@@ -1,0 +1,5 @@
+---
+NopError: !!float 0.8
+CharRepeatError: !!float 0.3
+CharInsertError: !!float 0.3
+CharSwapError: !!float 0.3
