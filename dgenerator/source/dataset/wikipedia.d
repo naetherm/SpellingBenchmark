@@ -136,7 +136,8 @@ class Wikipedia : DataSource {
     ulong nArticleCounter = 0;
     foreach (i; iota(this.mFilenames.length).snck) {
       if (((i+1) % this.mModFlag) == 0) {
-        auto l = this.mFilenames[i];
+        auto l = buildPath(this.mcArgs["input_dir"].get!string, this.mFilenames[i].split("/")[$-2] ~ "/" ~ this.mFilenames[i].split("/")[$-1]);
+        writeln("Will read information from file: ", l);
         //writeln("Read from file: ", l);
         dstring readBuf = to!dstring(readText(l));
         auto content = readBuf.lineSplitter().array;
@@ -223,7 +224,6 @@ class Wikipedia : DataSource {
                 grtPosition,
                 to!dstring(inpTokens[tIdx]),
                 n.errors[ii]);
-              tIdx++;
             }
             //TODO[FGRT]}
             // Increase all counters
@@ -233,9 +233,10 @@ class Wikipedia : DataSource {
               }
             } else {
               grtPosition += inpTokens[tIdx].length;
-              for (int spaces = 0; spaces < shift; ++i) {
+              for (int spaces = 0; spaces <= shift; ++spaces) {
                 grtPosition += n.spaces[spaces+ii] ? 1 : 0;
               }
+              tIdx++;
             }
             ii++;
           }
@@ -417,7 +418,7 @@ class Wikipedia : DataSource {
               // Generate the groundtruth information
               grtTokens ~= new GroundtruthRepresentation(nArticleCounter, cast(ulong)sIdx, ii-shift, ii, grtPosition, to!dstring(inpTokens[tIdx]), n.errors[ii]);
               grtPosition += inpTokens[tIdx].length;
-              for (int spaces = 0; spaces < shift; ++i) {
+              for (int spaces = 0; spaces < shift; ++spaces) {
                 grtPosition += n.spaces[spaces+ii] ? 1 : 0;
               }
               //TODO[FGRT]}
@@ -522,7 +523,7 @@ class Wikipedia : DataSource {
 
     for (size_t i = 0; i < result.length; i++) {
       auto pieces = result[i].split("/"); // We are only interested in the last to pieces
-      result[i] = buildPath(this.mcArgs["input_dir"].get!string, pieces[2], pieces[3]);
+      result[i] = buildPath(this.mcArgs["input_dir"].get!string, result[i]);
       //writeln("New path is: ", result[i]);
     }
     writeln("\tGenerated all input paths.");
