@@ -195,7 +195,7 @@ class Wikipedia : DataSource {
               // Find the END Mark
               while (n.marks[ii++] != MarkTypes.END) { shift++; }
               --ii;
-            } 
+            }
             if (n.marks[ii] == MarkTypes.SOURCE_ONLY) {
               shift++;
               // Generate the groundtruth information
@@ -236,9 +236,9 @@ class Wikipedia : DataSource {
               t.token = t.token.replace("\\", "\\\\");
             }
             if ((idx == (srcTokens.length - 1)) && (i == (this.mFilenames.length - 1))) {
-              sSourceOutput ~= format("  {\"id\": \"a%s.s%s.w%s\", \"token\": \"%s\", \"space\": %s}\n", t.aid, t.sid, t.id, to!string(t.token), t.space);
+              sSourceOutput ~= format("  {\"id\": \"a%s.s%s.w%s\", \"token\": \"%s\", \"length\": %d, \"space\": %s}\n", t.aid, t.sid, t.id, to!string(t.token), t.token.length, t.space);
             } else {
-              sSourceOutput ~= format("  {\"id\": \"a%s.s%s.w%s\", \"token\": \"%s\", \"space\": %s},\n", t.aid, t.sid, t.id, to!string(t.token), t.space);
+              sSourceOutput ~= format("  {\"id\": \"a%s.s%s.w%s\", \"token\": \"%s\", \"length\": %d, \"space\": %s},\n", t.aid, t.sid, t.id, to!string(t.token), t.token.length, t.space);
             }
           }
 
@@ -251,9 +251,9 @@ class Wikipedia : DataSource {
               t.correct = t.correct.replace("\\", "\\\\");
             }
             if (t.id1 != t.id2) {
-              sGroundtruthOutput ~= format("  {\"affected-id\": \"a%s.s%s.w%s-a%s.s%s.w%s\", \"correct\": \"%s\", \"type\": \"%s\"}", t.aid, t.sid, t.id1, t.aid, t.sid, t.id2, to!string(t.correct), TypeToName(t.error));
+              sGroundtruthOutput ~= format("  {\"affected-id\": \"a%s.s%s.w%s-a%s.s%s.w%s\", \"correct\": \"%s\", \"length\": %d, \"type\": \"%s\"}", t.aid, t.sid, t.id1, t.aid, t.sid, t.id2, to!string(t.correct), t.correct.length, TypeToName(t.error));
             } else {
-              sGroundtruthOutput ~= format("  {\"affected-id\": \"a%s.s%s.w%s\", \"correct\": \"%s\", \"type\": \"%s\"}", t.aid, t.sid, t.id1, to!string(t.correct), TypeToName(t.error));
+              sGroundtruthOutput ~= format("  {\"affected-id\": \"a%s.s%s.w%s\", \"correct\": \"%s\", \"length\": %d, \"type\": \"%s\"}", t.aid, t.sid, t.id1, to!string(t.correct), t.correct.length, TypeToName(t.error));
             }
             if ((idx == (grtTokens.length - 1)) && (i == (this.mFilenames.length - 1))) {
               sGroundtruthOutput ~= "\n";
@@ -281,9 +281,9 @@ class Wikipedia : DataSource {
               t.correct = t.correct.replace("\\", "\\\\");
             }
             if (t.id1 != t.id2) {
-              sGroundtruthOutput ~= format("  <correction affected-id=\"a%s.s%s.w%s-a%s.s%s.w%s\" correct=\"%s\" type=\"%s\"/>\n", t.aid, t.sid, t.id1, t.aid, t.sid, t.id2, to!string(t.correct), TypeToName(t.error));
+              sGroundtruthOutput ~= format("  <correction affected-id=\"a%s.s%s.w%s-a%s.s%s.w%s\" correct=\"%s\" length=\"%d\" type=\"%s\"/>\n", t.aid, t.sid, t.id1, t.aid, t.sid, t.id2, to!string(t.correct), t.correct.length, TypeToName(t.error));
             } else {
-              sGroundtruthOutput ~= format("  <correction affected-id=\"a%s.s%s.w%s\" correct=\"%s\" type=\"%s\"/>\n", t.aid, t.sid, t.id1, to!string(t.correct), TypeToName(t.error));
+              sGroundtruthOutput ~= format("  <correction affected-id=\"a%s.s%s.w%s\" correct=\"%s\" length=\"%d\" type=\"%s\"/>\n", t.aid, t.sid, t.id1, to!string(t.correct), t.correct.length, TypeToName(t.error));
             }
           }
         }
