@@ -233,9 +233,12 @@ class Wikipedia : DataSource {
               }
             } else {
               grtPosition += inpTokens[tIdx].length;
-              for (int spaces = 0; spaces <= shift; ++spaces) {
+              writeln("inpTokens: ", inpTokens[tIdx]);
+              writeln("shift: ", shift);
+              for (int spaces = 0; spaces < shift; ++spaces) {
                 grtPosition += n.spaces[spaces+ii] ? 1 : 0;
               }
+              grtPosition += n.spaces[ii] ? 1 : 0;
               tIdx++;
             }
             ii++;
