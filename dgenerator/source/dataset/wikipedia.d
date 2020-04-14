@@ -176,8 +176,13 @@ class Wikipedia : DataSource {
           SentenceRepresentation n = e[1]; // The sentence representation, created by the noiser
 
           // Write the input information
+          ulong srcPosition = 0;
           for (size_t tIdx = 0; tIdx < n.getNumCurrentTokens(); tIdx++) {
-            srcTokens ~= new SourceRepresentation(nArticleCounter, sIdx, tIdx, n.tokens[tIdx], n.spaces[tIdx]);
+            srcTokens ~= new SourceRepresentation(nArticleCounter, sIdx, tIdx, srcPosition, n.tokens[tIdx], n.spaces[tIdx]);
+            srcPosition += n.tokens[tIdx].length;
+            if (n.spaces[tIdx]) {
+              srcPosition += 1;
+            }
           }
 
           // Create the groundtruth information
@@ -187,6 +192,7 @@ class Wikipedia : DataSource {
 
           ulong tIdx = 0;
           ulong ii = 0;
+          ulong grtPosition = 0;
           while (ii < n.getNumCurrentTokens()) {
             ulong shift = 0;
             //TODO[FGRT]if (n.errors[ii] != ErrorTypes.NONE) {
@@ -204,6 +210,7 @@ class Wikipedia : DataSource {
                 sIdx,
                 ii,
                 ii,
+                grtPosition,
                 to!dstring(""),
                 n.errors[ii]);
             } else {
@@ -213,12 +220,23 @@ class Wikipedia : DataSource {
                 sIdx,
                 ii-shift,
                 ii,
+                grtPosition,
                 to!dstring(inpTokens[tIdx]),
                 n.errors[ii]);
               tIdx++;
             }
             //TODO[FGRT]}
             // Increase all counters
+            if (n.marks[ii] == MarkTypes.SOURCE_ONLY) {
+              if (n.spaces[ii]) {
+                grtPosition += 1;
+              }
+            } else {
+              grtPosition += inpTokens[tIdx].length;
+              for (int spaces = 0; spaces < shift; ++i) {
+                grtPosition += n.spaces[spaces+ii] ? 1 : 0;
+              }
+            }
             ii++;
           }
           globalSentenceID += 1;
@@ -236,9 +254,9 @@ class Wikipedia : DataSource {
               t.token = t.token.replace("\\", "\\\\");
             }
             if ((idx == (srcTokens.length - 1)) && (i == (this.mFilenames.length - 1))) {
-              sSourceOutput ~= format("  {\"id\": \"a%s.s%s.w%s\", \"token\": \"%s\", \"length\": %d, \"space\": %s}\n", t.aid, t.sid, t.id, to!string(t.token), t.token.length, t.space);
+              sSourceOutput ~= format("  {\"id\": \"a%s.s%s.w%s\", \"token\": \"%s\", \"pos\": %d, \"length\": %d, \"space\": %s}\n", t.aid, t.sid, t.id, to!string(t.token), t.pos, t.token.length, t.space);
             } else {
-              sSourceOutput ~= format("  {\"id\": \"a%s.s%s.w%s\", \"token\": \"%s\", \"length\": %d, \"space\": %s},\n", t.aid, t.sid, t.id, to!string(t.token), t.token.length, t.space);
+              sSourceOutput ~= format("  {\"id\": \"a%s.s%s.w%s\", \"token\": \"%s\", \"pos\": %d, \"length\": %d, \"space\": %s},\n", t.aid, t.sid, t.id, to!string(t.token), t.pos, t.token.length, t.space);
             }
           }
 
@@ -251,9 +269,9 @@ class Wikipedia : DataSource {
               t.correct = t.correct.replace("\\", "\\\\");
             }
             if (t.id1 != t.id2) {
-              sGroundtruthOutput ~= format("  {\"affected-id\": \"a%s.s%s.w%s-a%s.s%s.w%s\", \"correct\": \"%s\", \"length\": %d, \"type\": \"%s\"}", t.aid, t.sid, t.id1, t.aid, t.sid, t.id2, to!string(t.correct), t.correct.length, TypeToName(t.error));
+              sGroundtruthOutput ~= format("  {\"affected-id\": \"a%s.s%s.w%s-a%s.s%s.w%s\", \"correct\": \"%s\", \"pos\": %d, \"length\": %d, \"type\": \"%s\"}", t.aid, t.sid, t.id1, t.aid, t.sid, t.id2, to!string(t.correct), t.pos, t.correct.length, TypeToName(t.error));
             } else {
-              sGroundtruthOutput ~= format("  {\"affected-id\": \"a%s.s%s.w%s\", \"correct\": \"%s\", \"length\": %d, \"type\": \"%s\"}", t.aid, t.sid, t.id1, to!string(t.correct), t.correct.length, TypeToName(t.error));
+              sGroundtruthOutput ~= format("  {\"affected-id\": \"a%s.s%s.w%s\", \"correct\": \"%s\", \"pos\": %d, \"length\": %d, \"type\": \"%s\"}", t.aid, t.sid, t.id1, to!string(t.correct), t.pos, t.correct.length, TypeToName(t.error));
             }
             if ((idx == (grtTokens.length - 1)) && (i == (this.mFilenames.length - 1))) {
               sGroundtruthOutput ~= "\n";
@@ -270,7 +288,7 @@ class Wikipedia : DataSource {
             if (t.token == "\\") {
               t.token = t.token.replace("\\", "\\\\");
             }
-            sSourceOutput ~= format("  <st id=\"a%s.s%s.w%s\" token=\"%s\" space=\"%s\"/>\n", t.aid, t.sid, t.id, to!string(t.token), t.space);
+            sSourceOutput ~= format("  <st id=\"a%s.s%s.w%s\" token=\"%s\" pos=\"%d\" length=\"%d\" space=\"%s\"/>\n", t.aid, t.sid, t.id, to!string(t.token), t.pos, t.token.length, t.space);
           }
           foreach (idx, t; grtTokens.enumerate(0)) {
             // Some post corrections on the token data
@@ -281,9 +299,9 @@ class Wikipedia : DataSource {
               t.correct = t.correct.replace("\\", "\\\\");
             }
             if (t.id1 != t.id2) {
-              sGroundtruthOutput ~= format("  <correction affected-id=\"a%s.s%s.w%s-a%s.s%s.w%s\" correct=\"%s\" length=\"%d\" type=\"%s\"/>\n", t.aid, t.sid, t.id1, t.aid, t.sid, t.id2, to!string(t.correct), t.correct.length, TypeToName(t.error));
+              sGroundtruthOutput ~= format("  <correction affected-id=\"a%s.s%s.w%s-a%s.s%s.w%s\" correct=\"%s\" pos=\"%d\" length=\"%d\" type=\"%s\"/>\n", t.aid, t.sid, t.id1, t.aid, t.sid, t.id2, to!string(t.correct), t.pos, t.correct.length, TypeToName(t.error));
             } else {
-              sGroundtruthOutput ~= format("  <correction affected-id=\"a%s.s%s.w%s\" correct=\"%s\" length=\"%d\" type=\"%s\"/>\n", t.aid, t.sid, t.id1, to!string(t.correct), t.correct.length, TypeToName(t.error));
+              sGroundtruthOutput ~= format("  <correction affected-id=\"a%s.s%s.w%s\" correct=\"%s\" pos=\"%d\" length=\"%d\" type=\"%s\"/>\n", t.aid, t.sid, t.id1, to!string(t.correct), t.pos, t.correct.length, TypeToName(t.error));
             }
           }
         }
@@ -365,8 +383,13 @@ class Wikipedia : DataSource {
             SentenceRepresentation n = e[1]; // The sentence representation, created by the noiser
 
             // Write the input information
+            ulong srcPosition = 0;
             for (size_t tIdx = 0; tIdx < n.getNumCurrentTokens(); tIdx++) {
-              srcTokens ~= new SourceRepresentation(nArticleCounter, cast(ulong)sIdx, tIdx, n.tokens[tIdx], n.spaces[tIdx]);
+              srcTokens ~= new SourceRepresentation(nArticleCounter, cast(ulong)sIdx, tIdx, srcPosition, n.tokens[tIdx], n.spaces[tIdx]);
+              srcPosition += n.tokens[tIdx].length;
+              if (n.spaces[tIdx]) {
+                srcPosition += 1;
+              }
             }
 
             // Create the groundtruth information
@@ -377,6 +400,7 @@ class Wikipedia : DataSource {
             // We are using two variables here for the later introduction of categories like SPLIT, CONCATENATION and REPEAT
             ulong tIdx = 0;
             ulong ii = 0;
+            ulong grtPosition = 0;
             while (ii < n.getNumCurrentTokens()) {
               ulong shift = 0;
               //TODO[FGRT]if (n.errors[ii] != ErrorTypes.NONE) {
@@ -391,7 +415,11 @@ class Wikipedia : DataSource {
                 --ii;
               }
               // Generate the groundtruth information
-              grtTokens ~= new GroundtruthRepresentation(nArticleCounter, cast(ulong)sIdx, ii-shift, ii, to!dstring(inpTokens[tIdx]), n.errors[ii]);
+              grtTokens ~= new GroundtruthRepresentation(nArticleCounter, cast(ulong)sIdx, ii-shift, ii, grtPosition, to!dstring(inpTokens[tIdx]), n.errors[ii]);
+              grtPosition += inpTokens[tIdx].length;
+              for (int spaces = 0; spaces < shift; ++i) {
+                grtPosition += n.spaces[spaces+ii] ? 1 : 0;
+              }
               //TODO[FGRT]}
               // Increase all counters
               tIdx++;
@@ -413,9 +441,9 @@ class Wikipedia : DataSource {
                   t.token = t.token.replace("\\", "\\\\");
                 }
                 if (idx == (srcTokens.length - 1)) {
-                  sSrcOut ~= format("  {\"id\": \"a%s.s%s.w%s\", \"token\": \"%s\", \"space\": %s}\n", nArticleCounter, t.sid, t.id, to!string(t.token), t.space);
+                  sSrcOut ~= format("  {\"id\": \"a%s.s%s.w%s\", \"token\": \"%s\", \"pos\": %d, \"length\": %d, \"space\": %s}\n", nArticleCounter, t.sid, t.id, to!string(t.token), t.pos, t.token.length, t.space);
                 } else {
-                  sSrcOut ~= format("  {\"id\": \"a%s.s%s.w%s\", \"token\": \"%s\", \"space\": %s},\n", nArticleCounter, t.sid, t.id, to!string(t.token), t.space);
+                  sSrcOut ~= format("  {\"id\": \"a%s.s%s.w%s\", \"token\": \"%s\", \"pos\": %d, \"length\": %d, \"space\": %s},\n", nArticleCounter, t.sid, t.id, to!string(t.token), t.pos, t.token.length, t.space);
                 }
               }
               sSrcOut ~= "\n  ]\n}";
@@ -429,9 +457,9 @@ class Wikipedia : DataSource {
                   t.correct = t.correct.replace("\\", "\\\\");
                 }
                 if (t.id1 != t.id2) {
-                  sGrtOut ~= format("  {\"affected-id\": \"a%s.s%s.w%s-a%s.s%s.w%s\", \"correct\": \"%s\", \"type\": \"%s\"}", nArticleCounter, t.sid, t.id1, nArticleCounter, t.sid, t.id2, to!string(t.correct), TypeToName(t.error));
+                  sGrtOut ~= format("  {\"affected-id\": \"a%s.s%s.w%s-a%s.s%s.w%s\", \"correct\": \"%s\", \"pos\": %d, \"length\": %d, \"type\": \"%s\"}", nArticleCounter, t.sid, t.id1, nArticleCounter, t.sid, t.id2, to!string(t.correct), t.pos, t.correct.length, TypeToName(t.error));
                 } else {
-                  sGrtOut ~= format("  {\"affected-id\": \"a%s.s%s.w%s\", \"correct\": \"%s\", \"type\": \"%s\"}", nArticleCounter, t.sid, t.id1, to!string(t.correct), TypeToName(t.error));
+                  sGrtOut ~= format("  {\"affected-id\": \"a%s.s%s.w%s\", \"correct\": \"%s\", \"pos\": %d, \"length\": %d, \"type\": \"%s\"}", nArticleCounter, t.sid, t.id1, to!string(t.correct), t.pos, t.correct.length, TypeToName(t.error));
                 }
                 if (idx != (grtTokens.length - 1)) {
                   sGrtOut ~= ",\n";
@@ -451,9 +479,9 @@ class Wikipedia : DataSource {
                   t.token = t.token.replace("\\", "\\\\");
                 }
                 if (idx == (srcTokens.length - 1)) {
-                  sSrcOut ~= format("  <st id=\"a%s.s%s.w%s\" token=\"%s\" space=\"%s\"/>\n", nArticleCounter, t.sid, t.id, to!string(t.token), t.space);
+                  sSrcOut ~= format("  <st id=\"a%s.s%s.w%s\" token=\"%s\" pos=\"%d\" length=\"%d\" space=\"%s\"/>\n", nArticleCounter, t.sid, t.id, to!string(t.token), t.pos, t.token.length, t.space);
                 } else {
-                  sSrcOut ~= format("  <st id=\"a%s.s%s.w%s\" token=\"%s\" space=\"%s\"/>\n", nArticleCounter, t.sid, t.id, to!string(t.token), t.space);
+                  sSrcOut ~= format("  <st id=\"a%s.s%s.w%s\" token=\"%s\" pos=\"%d\" length=\"%d\" space=\"%s\"/>\n", nArticleCounter, t.sid, t.id, to!string(t.token), t.pos, t.token.length, t.space);
                 }
               }
               sSrcOut ~= "\n</tokens>";
@@ -467,9 +495,9 @@ class Wikipedia : DataSource {
                   t.correct = t.correct.replace("\\", "\\\\");
                 }
                 if (t.id1 != t.id2) {
-                  sGrtOut ~= format("  <correction affected-id=\"a%s.s%s.w%s-a%s.s%s.w%s\" correct=\"%s\" type=\"%s\"/>\n", nArticleCounter, t.sid, t.id1, nArticleCounter, t.sid, t.id2, to!string(t.correct), TypeToName(t.error));
+                  sGrtOut ~= format("  <correction affected-id=\"a%s.s%s.w%s-a%s.s%s.w%s\" correct=\"%s\" pos=\"%d\" length=\"%d\" type=\"%s\"/>\n", nArticleCounter, t.sid, t.id1, nArticleCounter, t.sid, t.id2, to!string(t.correct), t.pos, t.correct.length, TypeToName(t.error));
                 } else {
-                  sGrtOut ~= format("  <correction affected-id=\"a%s.s%s.w%s\" correct=\"%s\" type=\"%s\"/>\n", nArticleCounter, t.sid, t.id1, to!string(t.correct), TypeToName(t.error));
+                  sGrtOut ~= format("  <correction affected-id=\"a%s.s%s.w%s\" correct=\"%s\" pos=\"%d\" length=\"%d\" type=\"%s\"/>\n", nArticleCounter, t.sid, t.id1, to!string(t.correct), t.pos, t.correct.length, TypeToName(t.error));
                 }
               }
               sGrtOut ~= "\n</corrections>";

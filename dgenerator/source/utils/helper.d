@@ -27,29 +27,33 @@ class SourceRepresentation {
    * @brief
    * Constructor.
    */
-  this(ulong aid, ulong nSid, ulong nId, dstring sToken, bool bSpace) {
+  this(ulong aid, ulong nSid, ulong nId, ulong nPos, dstring sToken, bool bSpace) {
     this.aid = aid;
     this.sid = nSid;
     this.id = nId;
+    this.pos = nPos;
     this.token = sToken;
     this.space = bSpace;
   }
 
   string asJson() {
-    return format("  {\"id\": \"a%s.s%s.w%s\", \"token\": \"%s\", \"space\": %s}\n",
+    return format("  {\"id\": \"a%s.s%s.w%s\", \"token\": \"%s\", \"pos\": %d, \"length\": %d, \"space\": %s}\n",
       this.aid,
       this.sid,
       this.id,
+      this.pos,
       to!string(this.token),
+      this.token.length,
       this.space
     );
   }
 
   ulong aid; // Article ID
-  ulong sid;
-  ulong id;
-  dstring token;
-  bool space;
+  ulong sid; // The sentence id
+  ulong id; // The token id
+  ulong pos; // The position within the source sentence
+  dstring token; // The token
+  bool space; // Is there a space after the current token?
 }
 
 /**
@@ -68,11 +72,12 @@ class GroundtruthRepresentation {
    * Constructor. This constructor is used when the source tokens do not
    * represent a span of elements.
    */
-  this(ulong aid, ulong nSid, ulong nId1, dstring sCorrect, ErrorTypes nError) {
+  this(ulong aid, ulong nSid, ulong nId1, ulong nPos, dstring sCorrect, ErrorTypes nError) {
     this.aid = aid;
     this.sid = nSid;
     this.id1 = nId1;
     this.id2 = nId1;
+    this.pos = nPos;
     this.correct = sCorrect;
     this.error = nError;
   }
@@ -83,18 +88,19 @@ class GroundtruthRepresentation {
    ' multiple elements which is usually the case when we have error types like
    * REPEAT or SPLIT.'
    */
-  this(ulong aid, ulong nSid, ulong nId1, ulong nId2, dstring sCorrect, ErrorTypes nError) {
+  this(ulong aid, ulong nSid, ulong nId1, ulong nId2, ulong nPos, dstring sCorrect, ErrorTypes nError) {
     this.aid = aid;
     this.sid = nSid;
     this.id1 = nId1;
     this.id2 = nId2;
+    this.pos = nPos;
     this.correct = sCorrect;
     this.error = nError;
   }
 
   string asJson() {
     if (this.id1 != this.id2) {
-      return format("  {\"affected-id\": \"a%s.s%s.w%s-a%s.s%s.w%s\", \"correct\": \"%s\", \"type\": \"%s\"}",
+      return format("  {\"affected-id\": \"a%s.s%s.w%s-a%s.s%s.w%s\", \"correct\": \"%s\", \"pos\": %d, \"length\": %d, \"type\": \"%s\"}",
         this.aid,
         this.sid,
         this.id1,
@@ -102,14 +108,18 @@ class GroundtruthRepresentation {
         this.sid,
         this.id2,
         to!string(this.correct),
+        this.pos,
+        this.correct.length,
         TypeToName(this.error)
       );
     } else {
-      return format("  {\"affected-id\": \"a%s.s%s.w%s\", \"correct\": \"%s\", \"type\": \"%s\"}",
+      return format("  {\"affected-id\": \"a%s.s%s.w%s\", \"correct\": \"%s\", \"pos\": %d, \"length\": %d, \"type\": \"%s\"}",
         this.aid,
         this.sid,
         this.id1,
         to!string(this.correct),
+        this.pos,
+        this.correct.length,
         TypeToName(this.error)
       );
     }
@@ -119,6 +129,7 @@ class GroundtruthRepresentation {
   ulong sid;
   ulong id1;
   ulong id2;
+  ulong pos;
   dstring correct;
   ErrorTypes error;
 }
