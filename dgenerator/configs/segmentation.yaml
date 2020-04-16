@@ -1,0 +1,7 @@
+---
+WordConcatenationError: !!float 0.1
+WordHyphenationError: !!float 0.1
+WordRemoveHyphenationError: !!float 0.1
+HyphenationSplitError: !!float 0.1
+RandomSplitError: !!float 0.1
+MultiRandomSplitError: !!float 0.3
