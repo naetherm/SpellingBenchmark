@@ -23,7 +23,7 @@ class NumericError : ErrorInterface {
     this.mRnd = noiser.mRnd;
   }
 
-  ref SentenceRepresentation call(ref SentenceRepresentation cSent, bool bFurtherDestruction) {
+  ref SentenceRepresentation call(return ref SentenceRepresentation cSent, bool bFurtherDestruction) return {
 
     return cSent;
   }

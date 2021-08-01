@@ -32,7 +32,7 @@ class TenseError : ErrorInterface {
     this.mpLanguage = noiser.mlstLanguages[sLangCode];
   }
 
-  ref SentenceRepresentation call(ref SentenceRepresentation cSent, bool bFurtherDestruction) {
+  ref SentenceRepresentation call(return ref SentenceRepresentation cSent, bool bFurtherDestruction) return {
     // First let's loop through all tokens of the sentence and collect which one is a verb at all
     ulong[] lstIndices;
 

@@ -39,7 +39,7 @@ interface ErrorInterface {
    * @brief
    * Caller for the specific error generation.
    */
-  ref SentenceRepresentation call(ref SentenceRepresentation cSent, bool bFurtherDestruction);
+  ref SentenceRepresentation call(return ref SentenceRepresentation cSent, bool bFurtherDestruction) return;
 
   /**
    * @brief
@@ -73,7 +73,7 @@ class ErrorWrapper {
 
   }
 
-  ref SentenceRepresentation call(ref SentenceRepresentation cSent, bool bFurtherDestruction) {
+  ref SentenceRepresentation call(return ref SentenceRepresentation cSent, bool bFurtherDestruction) return {
     return this.wrapped.call(cSent, bFurtherDestruction);
   }
 

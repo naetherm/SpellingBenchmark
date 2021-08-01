@@ -35,7 +35,7 @@ class PunctuationError : ErrorInterface {
    * @brief
    * Does nothing.
    */
-  ref SentenceRepresentation call(ref SentenceRepresentation cSent, bool bFurtherDestruction) {
+  ref SentenceRepresentation call(return ref SentenceRepresentation cSent, bool bFurtherDestruction) return {
     // Get random position
     ulong rW = NoiserUtility.getRandomPosition(0, cSent.getNumCurrentTokens() - 1, this.mRnd);
 
@@ -69,7 +69,7 @@ class AddCommaError : ErrorInterface {
     this.mRnd = noiser.mRnd;
   }
 
-  ref SentenceRepresentation call(ref SentenceRepresentation cSent, bool bFurtherDestruction) {
+  ref SentenceRepresentation call(return ref SentenceRepresentation cSent, bool bFurtherDestruction) return {
 
     // Choose random position to insert a comma
     return cSent;
@@ -85,7 +85,7 @@ class RemoveCommaError : ErrorInterface {
     this.mRnd = noiser.mRnd;
   }
 
-  ref SentenceRepresentation call(ref SentenceRepresentation cSent, bool bFurtherDestruction) {
+  ref SentenceRepresentation call(return ref SentenceRepresentation cSent, bool bFurtherDestruction) return {
 
     // Check if a comma exists within the sentence
     ulong[] positions = NoiserUtility.getCommaPosiions(cSent);
@@ -109,7 +109,7 @@ class CommaPlacementError : ErrorInterface {
     this.mpLanguage = noiser.mlstLanguages[sLangCode];
   }
 
-  ref SentenceRepresentation call(ref SentenceRepresentation cSent, bool bFurtherDestruction) {
+  ref SentenceRepresentation call(return ref SentenceRepresentation cSent, bool bFurtherDestruction) return {
     // Get random position
     ulong rW = NoiserUtility.getRandomPosition(0, cSent.getNumCurrentTokens() - 1, this.mRnd);
 

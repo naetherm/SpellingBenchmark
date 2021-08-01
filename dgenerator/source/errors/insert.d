@@ -36,7 +36,7 @@ class CharInsertError : ErrorInterface {
    * @brief
    * Does nothing.
    */
-  ref SentenceRepresentation call(ref SentenceRepresentation cSent, bool bFurtherDestruction) {
+  ref SentenceRepresentation call(return ref SentenceRepresentation cSent, bool bFurtherDestruction) return {
     // Get random position
     ulong rW = NoiserUtility.getRandomPosition(0, cSent.getNumCurrentTokens() - 1, this.mRnd);
 

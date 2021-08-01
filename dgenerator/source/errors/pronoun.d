@@ -32,7 +32,7 @@ class PronounError : ErrorInterface {
     this.mpLanguage = noiser.mlstLanguages[sLangCode];
   }
 
-  ref SentenceRepresentation call(ref SentenceRepresentation cSent, bool bFurtherDestruction) {
+  ref SentenceRepresentation call(return ref SentenceRepresentation cSent, bool bFurtherDestruction) return {
 
     // Check if we can find a indirect mentioning within the given sentence
 

@@ -34,7 +34,7 @@ class WordConcatenationError : ErrorInterface {
    * @brief
    * Does nothing.
    */
-  ref SentenceRepresentation call(ref SentenceRepresentation cSent, bool bFurtherDestruction) {
+  ref SentenceRepresentation call(return ref SentenceRepresentation cSent, bool bFurtherDestruction) return {
     // Only if the length is logn enough
     if (cSent.getNumCurrentTokens() > 2) {
       // Get random position

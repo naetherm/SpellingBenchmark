@@ -37,7 +37,7 @@ class WordHyphenationError : ErrorInterface {
    * @brief
    * Does nothing.
    */
-  ref SentenceRepresentation call(ref SentenceRepresentation cSent, bool bFurtherDestruction) {
+  ref SentenceRepresentation call(return ref SentenceRepresentation cSent, bool bFurtherDestruction) return {
     // First branch: Search in all tokens if we find one that is length > 1 and
     // contains a hyphen without being already an induced highenation error
     for (size_t i = 0; i < cSent.getNumCurrentTokens(); ++i) {
@@ -104,7 +104,7 @@ class WordRemoveHyphenationError : ErrorInterface {
    * @brief
    * Does nothing.
    */
-  ref SentenceRepresentation call(ref SentenceRepresentation cSent, bool bFurtherDestruction) {
+  ref SentenceRepresentation call(return ref SentenceRepresentation cSent, bool bFurtherDestruction) return  {
     // First branch: Search in all tokens if we find one that is length > 1 and
     // contains a hyphen without being already an induced highenation error
     for (size_t i = 0; i < cSent.getNumCurrentTokens(); ++i) {
